@@ -54,3 +54,42 @@ body.proyectar #v-voz .vz-dos{grid-template-columns:minmax(0,1.25fr) minmax(0,1f
 body.proyectar #v-voz h1{font-size:44px}
 .vz-proc{color:var(--warn)!important;font-weight:700}
 .vz-proc svg{animation:p2 1.2s infinite}@keyframes p2{50%{opacity:.3}}
+
+/* nube de palabras */
+.vz-nube-caja{background:var(--sup);border:1px solid var(--linea);border-radius:12px;padding:16px 18px 14px;margin:18px 0}
+.vz-nube-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.vz-nube-top h2{margin:0}
+.vz-nube{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 16px;padding:14px 4px 6px;min-height:90px}
+.vz-w{font-family:Archivo,sans-serif;font-weight:800;line-height:1.05;background:none;border:0;padding:2px 4px;cursor:pointer;color:var(--ink);border-radius:8px;transition:transform .25s,opacity .25s}
+.vz-w:hover{transform:scale(1.06)}
+.vz-w.on{outline:2px solid var(--acc);outline-offset:2px}
+.vz-w.apagada{opacity:.28}
+.vz-w i{font-style:normal;font-size:.42em;font-weight:700;color:var(--gris);margin-left:.25em;vertical-align:super}
+.w-t{color:var(--p1)}.w-e{color:var(--inv)}.w-g{color:var(--p2)}.w-otra{color:var(--gris)}
+.vz-quienes{border-top:1px solid var(--linea);margin-top:10px;padding-top:12px;display:none}
+.vz-quienes.abierta{display:block}
+.vz-quienes p{font-family:Archivo,sans-serif;font-size:13px;color:var(--ink2);margin:0 0 10px}
+.vz-escudos{display:flex;flex-wrap:wrap;gap:10px}
+.vz-esc{display:flex;align-items:center;gap:8px;background:var(--crema);border-radius:99px;padding:5px 12px 5px 5px;font-family:Archivo,sans-serif;font-size:13px;font-weight:700;color:var(--ink);max-width:260px}
+.vz-esc b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11.5px;letter-spacing:.02em;flex:0 0 auto}
+.vz-esc img{width:30px;height:30px;border-radius:50%;object-fit:contain;background:#fff;flex:0 0 auto}
+.vz-esc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vz-nube-vacia{color:var(--gris);font-size:14.5px;text-align:center;padding:16px 0}
+body.proyectar .vz-nube{gap:6px 26px;padding:22px 8px 10px;min-height:200px}
+body.proyectar .vz-nube-caja{margin:22px 0}
+
+/* secciones de la vista */
+.vz-secs{margin:16px 0 4px}
+.vz-sec{display:none}
+.vz-sec.abierta{display:block;animation:entra .35s ease-out}
+@media (prefers-reduced-motion:reduce){.vz-sec.abierta{animation:none}}
+body.proyectar .vz-secs{margin:18px 0 2px}
+body.proyectar .vz-secs .sug{font-size:15px;padding:9px 18px}
+
+/* al proyectar, la sala ve la pieza — no el texto explicativo */
+body.proyectar #v-voz .dek,body.proyectar #v-voz .vz-nota{display:none}
+body.proyectar #v-voz h1{font-size:40px;margin:2px 0 10px}
+body.proyectar #v-voz .vz-kpis{margin:10px 0 2px;gap:10px}
+body.proyectar #v-voz .vz-kpis .kpi{padding:10px 14px}
+body.proyectar #v-voz .vz-kpis .num{font-size:30px}
+body.proyectar .vz-nube{min-height:340px}
