@@ -205,7 +205,8 @@ function pinta(){
   const orgs=new Set(T.map(d=>sinTildes(nombreOrg(d.organizacion))).filter(Boolean));
   // momentos
   const M=$v("#vzMom");M.innerHTML="";
-  [[0,"Todo"],[1,"Visión"],[2,"Compromiso"]].forEach(([k,t])=>{const b=document.createElement("button");b.className="sug"+(k===filMom?" on":"");b.type="button";
+  /* cada momento con su color de la paleta: todo marino, visión petróleo, compromiso naranja */
+  [[0,"Todo","m-todo"],[1,"Visión","m-vision"],[2,"Compromiso","m-compromiso"]].forEach(([k,t,cl])=>{const b=document.createElement("button");b.className="sug "+cl+(k===filMom?" on":"");b.type="button";
     b.textContent=t+" ("+(k?T.filter(d=>+d.momento===k).length:T.length)+")";b.onclick=()=>{filMom=k;pinta()};M.appendChild(b)});
   // kpis
   /* tres indicadores, cada uno con su color de la paleta */
