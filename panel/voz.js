@@ -1,3 +1,4 @@
+
 /* ===== La voz de la Junta ===== */
 (function(){
 /* CONFIGURACIÓN — pegue aquí la URL del Apps Script (termina en /exec).
@@ -6,7 +7,6 @@ const VOZ_CONFIG={
   url:"",          // direccion del Apps Script (/exec): se pasa al proyectar con ?fuente=
   token:"",        // clave del panel: se pasa al proyectar con ?clave=
   refrescoSeg:20,   // cada cuánto se consultan voces nuevas
-  censoBase:113     // afirmaciones del censo antes del evento (actualizar el día del evento)
 };
 /* Se puede pasar la fuente en la dirección (?fuente=...&clave=...), pero solo si apunta al Apps Script */
 try{const q=new URLSearchParams(location.search);const f=q.get("fuente");
@@ -22,11 +22,16 @@ const secN=Object.fromEntries(SECT.map(x=>[x[0],x[1]]));
 const MIC='<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
 /* NUBE DE PALABRAS — nucleo curado (palabra -> palanca). Las de fuera entran con 3+ menciones. */
-const VOCAB={vias:"conectividad",puerto:"conectividad",aeropuerto:"conectividad",conectividad:"conectividad",logistica:"conectividad",
- energia:"energia",tarifas:"energia",agua:"agua",acueducto:"agua",riego:"agua",dique:"agua",clima:"clima",erosion:"clima",
- formalizacion:"reglas",tramites:"reglas",regulacion:"reglas",credito:"credito",financiamiento:"credito",garantias:"credito",mipyme:"credito",
- talento:"formacion",bilinguismo:"formacion",turismo:"formacion",industria:"formacion",agro:"formacion",
- empleo:"brechas",pobreza:"brechas",inclusion:"brechas",ruralidad:"brechas",instituciones:"instituciones"};
+const VOCAB={
+ vias:"conectividad",puerto:"conectividad",aeropuerto:"conectividad",tren:"conectividad",conectividad:"conectividad",logistica:"conectividad",dragado:"conectividad",corredores:"conectividad",internet:"conectividad",
+ energia:"energia",tarifas:"energia",gas:"energia",renovables:"energia",apagones:"energia",
+ agua:"agua",acueducto:"agua",riego:"agua",dique:"agua",saneamiento:"agua",
+ clima:"clima",erosion:"clima",adaptacion:"clima",manglares:"clima",residuos:"clima",
+ formalizacion:"reglas",tramites:"reglas",regulacion:"reglas",ventanilla:"reglas",informalidad:"reglas",
+ credito:"credito",financiamiento:"credito",garantias:"credito",mipyme:"credito",emprendimiento:"credito",
+ formacion:"formacion",talento:"formacion",bilinguismo:"formacion",competencias:"formacion",aprendices:"formacion",
+ empleo:"brechas",pobreza:"brechas",inclusion:"brechas",ruralidad:"brechas",barrios:"brechas",equidad:"brechas",
+ instituciones:"instituciones",gobernanza:"instituciones",coordinacion:"instituciones",ejecucion:"instituciones",transparencia:"instituciones"};
 const MIN_FUERA=3;   // menciones minimas para que entre una palabra que no esta en el nucleo
 const VACIAS=new Set("para pero como este esta esto esos esas aqui alli donde cuando porque sobre entre desde hasta cada todo toda todos todas muy mas menos algo nada otro otra segun ante bajo tras solo tambien nuestro nuestra sera seria hacer tener poder deber estar haber".split(" "));
 const sinTildes=t=>String(t||"").toLowerCase().normalize("NFD").replace(new RegExp("["+String.fromCharCode(768)+"-"+String.fromCharCode(879)+"]","g"),"").trim();
@@ -41,45 +46,138 @@ const palabrasDe=d=>{
   if(fuera.length)return fuera;
   return PRESTADA[d.palanca]?[PRESTADA[d.palanca]]:[];
 };
-/* logos: cuando exista el catalogo, se llena con {organizacion normalizada: "url"} */
+/* ===== Las 60 organizaciones invitadas =====
+   Cada fila es [nombre oficial, sigla del escudo, otras formas de escribirlo].
+   Sirve para que "CCC", "la camara" y "Camara de Comercio de Cartagena" sean
+   la misma organizacion y no tres escudos distintos en la nube. */
+const ORGS=[
+["Cámara de Comercio de Cartagena","CCC",["ccc", "camara de comercio", "camara comercio cartagena", "la camara", "camara de comercio cartagena"]],
+["Consejo Gremial de Bolívar","CGB",["cgb", "consejo gremial", "consejo gremial bolivar"]],
+["Congresistas de Bolívar","CB",["congresista", "congreso bolivar", "bancada de bolivar", "bancada bolivar"]],
+["Alcaldía de Cartagena de Indias","ALC",["alcaldia", "alcaldia de cartagena", "distrito de cartagena", "distrito"]],
+["Gobernación de Bolívar","GOB",["gobernacion", "gobernacion de bolivar", "departamento de bolivar"]],
+["ACOPI Bolívar","ACO",["acopi"]],
+["Afinia Grupo EPM","AFI",["afinia", "grupo epm", "epm"]],
+["ANATO Noroccidente","ANA",["anato"]],
+["Asociación Náutica de Colombia","ANC",["asonautica", "asociacion nautica", "nautica de colombia"]],
+["ANDI Más País (Seccional Bolívar)","ANDI",["andi", "andi bolivar", "andi mas pais"]],
+["ASOTELCA","ASO",["asotelca"]],
+["CAMACOL Bolívar","CAM",["camacol"]],
+["Convention & Visitors Bureau","CVB",["cvb", "convention bureau", "visitors bureau", "convention and visitors bureau", "bureau"]],
+["Comfenalco","CMF",["comfenalco", "comfenalco cartagena"]],
+["Cotelco","COT",["cotelco", "cotelco bolivar"]],
+["Fenalco Bolívar","FEN",["fenalco"]],
+["FENDIPETROLEO","FDP",["fendipetroleo", "fendipetroleo bolivar"]],
+["FITAC","FTC",["fitac"]],
+["Fundación Santo Domingo","FSD",["fsd", "santo domingo", "fundacion santo domingo"]],
+["Fundación Serena del Mar","FSM",["serena del mar", "fundacion serena"]],
+["Fundación Tenaris TuboCaribe","FTT",["tenaris", "tubocaribe", "tenaris tubocaribe"]],
+["Grupo Argos Fundación","GAF",["fundacion grupo argos", "argos fundacion"]],
+["Lonja de Propiedad Raíz","LPR",["lonja", "lonja de propiedad raiz", "la lonja"]],
+["Ruta Costera | Isa VÍAS","RC",["ruta costera", "isa vias", "isa"]],
+["SIAB","SIA",["siab"]],
+["Sociedad de Mejoras Públicas","SMP",["smp", "sociedad de mejoras", "mejoras publicas"]],
+["Undetco","UND",["undetco"]],
+["Agrem","AGR",["agrem"]],
+["Acodrés","ACO",["acodres"]],
+["Fundación Centro Histórico","FCH",["centro historico", "fundacion centro historico"]],
+["Analdex","ANX",["analdex"]],
+["Agentucol","AGT",["agentucol"]],
+["Amcham Cartagena","AMC",["amcham", "camara colombo americana"]],
+["Asonav","ASN",["asonav"]],
+["Traso","TRA",["traso"]],
+["Fundación Grupo Social","FGS",["grupo social", "fundacion grupo social"]],
+["Riescar (Universidades Cartagena)","RIE",["riescar", "universidades de cartagena"]],
+["Asiesca (Universidades Caribe)","ASI",["asiesca", "universidades del caribe"]],
+["Basc","BSC",["basc", "basc caribe"]],
+["Cámara Marítima Colombiana","CMC",["camara maritima", "camara maritima colombiana", "camara maritica"]],
+["Armcol","ARM",["armcol"]],
+["Círculo de Obreros","CDO",["circulo de obreros"]],
+["CCI","CCI",["cci", "camara colombiana de infraestructura"]],
+["Funcicar","FUN",["funcicar"]],
+["Cartagena Cómo Vamos","CCV",["cartagena como vamos", "como vamos"]],
+["Comisión Regional de Competitividad","CRC",["crc", "comision regional", "comision regional de competitividad e innovacion", "crci"]],
+["Invest In Cartagena & Bolívar","INV",["invest in cartagena", "invest", "invest in cartagena y bolivar"]],
+["Comité Intergremial del Atlántico","CIA",["comite intergremial", "intergremial del atlantico"]],
+["CTP Cartagena","CTP",["ctp", "consejo territorial de planeacion"]],
+["RAP Caribe","RAP",["rap", "rap caribe", "region administrativa"]],
+["CUEE","CUE",["cuee", "comite universidad empresa estado"]],
+["Fundación Puerto de Cartagena","FPC",["fundacion puerto de cartagena", "fundacion puerto"]],
+["Sacyr","SAC",["sacyr"]],
+["Oinac","OIN",["oinac"]],
+["Odinsa","ODI",["odinsa"]],
+["Puerto de Cartagena","PDC",["puerto de cartagena", "grupo puerto de cartagena", "sociedad portuaria"]],
+["Refinería","REF",["refineria", "refineria de cartagena", "reficar", "ecopetrol"]],
+["Cementos Argos","ARG",["argos", "cementos argos"]],
+["PDP Canal del Dique","PDP",["pdp", "canal del dique", "pdp canal del dique"]],
+["Diálogo Social","DS",["dialogo social"]]];
+
+/* Catalogo de logos. Vacio = todos usan escudo de sigla.
+   Para poner un logo real: LOGOS["Cámara de Comercio de Cartagena"]="data:image/png;base64,...."
+   o una URL. La clave es el nombre oficial, tal como aparece arriba. */
 const LOGOS={};
-const COLORES=["#3FA3AA","#43B77A","#6B8CFF","#FF7A3D","#F25100","#083D42","#7A5CFF","#C2185B"];
-function escudo(org){
-  const n=sinTildes(org)||"?";
-  if(LOGOS[n])return `<img src="${LOGOS[n]}" alt="">`;
-  const ini=String(org||"?").split(/\s+/).filter(x=>x.length>2).slice(0,2).map(x=>x[0].toUpperCase()).join("")||String(org||"?").slice(0,2).toUpperCase();
-  let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;
-  return `<b style="background:${COLORES[h%COLORES.length]}">${esc(ini)}</b>`;
+
+/* indice de busqueda, de la clave mas larga a la mas corta para que
+   "fundacion puerto de cartagena" gane sobre "puerto de cartagena" */
+const ORGIDX=(()=>{const m=new Map();
+  ORGS.forEach((o,i)=>{m.set(sinTildes(o[0]).replace(/[^a-z0-9ñ ]/g," ").replace(/\s+/g," ").trim(),i);o[2].forEach(a=>{if(!m.has(a))m.set(a,i)})});
+  return [...m.entries()].sort((a,b)=>b[0].length-a[0].length)})();
+const cacheOrg=new Map();
+function buscaOrg(txt){
+  const n=sinTildes(txt).replace(/[^a-z0-9ñ ]/g," ").replace(/\s+/g," ").trim();
+  if(!n)return -1;
+  if(cacheOrg.has(n))return cacheOrg.get(n);
+  let r=-1;
+  for(const [k,i] of ORGIDX){if(n===k){r=i;break}}
+  if(r<0)for(const [k,i] of ORGIDX){if(k.length>=4&&(n.indexOf(k)>=0||k.indexOf(n)>=0)){r=i;break}}
+  cacheOrg.set(n,r);return r;
 }
+/* colores del escudo: los de la paleta que aguantan texto blanco encima */
+const COLORES=["#073A56","#017C9C","#E0691B","#14618B","#B2531A","#0E4A6B"];
+function escudo(org){
+  const i=buscaOrg(org),o=i>=0?ORGS[i]:null;
+  const nombre=o?o[0]:String(org||"?");
+  const clave=o?o[0]:sinTildes(org);
+  if(LOGOS[clave])return `<img src="${LOGOS[clave]}" alt="${esc(nombre)}" title="${esc(nombre)}">`;
+  const ini=o?o[1]:(String(org||"?").split(/\s+/).filter(x=>x.length>2).slice(0,2).map(x=>x[0].toUpperCase()).join("")||String(org||"?").slice(0,2).toUpperCase());
+  const n=sinTildes(nombre)||"?";
+  let h=0;for(let j=0;j<n.length;j++)h=(h*31+n.charCodeAt(j))>>>0;
+  const fs=ini.length>=4?9.5:ini.length===3?11:12.5;
+  return `<b style="background:${COLORES[h%COLORES.length]};font-size:${fs}px" title="${esc(nombre)}">${esc(ini)}</b>`;
+}
+/* el nombre que se proyecta: el oficial cuando la organizacion esta en la lista */
+function nombreOrg(org){const i=buscaOrg(org);return i>=0?ORGS[i][0]:String(org||"")}
 let filPalabra=null;
 let secAbierta="nube";   // nube | palancas | voces
 
-/* DATOS DE PRUEBA — organizaciones genéricas, no son respuestas reales */
+/* DATOS DE PRUEBA — frases inventadas para ver el panel antes del evento.
+   Las organizaciones sí son de la lista de invitados, para probar los escudos.
+   Ninguna de estas voces es real. */
 const D=(m,n,o,p,s,t,f,a)=>({momento:m,nombre:n,organizacion:o,palanca:p,sector:s,texto:t||"",audio:a!==0,validada:n.length%3===0});
 const DEMO=[
-D(1,"Laura","Gremio industrial","energia","industria","Que Cartagena sea un hub industrial y no solo turístico: con energía confiable, Mamonal puede duplicar su empleo formal."),
-D(1,"Andrés","Operador portuario","conectividad","comext","Que el puerto se conecte por tren y doble calzada con el interior del país."),
-D(1,"Marcela","Gremio hotelero","conectividad","turismo","Un aeropuerto a la altura de los visitantes que ya tenemos."),
-D(1,"Jorge","Asociación agropecuaria","agua","agro","Riego para Montes de María: el agua para producir no es la misma que el agua para vivir.",0,1),
-D(1,"Diana","Fundación empresarial","brechas","hogares","Que el crecimiento llegue a los barrios que no ven el puerto."),
-D(1,"Camilo","Clúster marítimo","reglas","maritimo","Que los astilleros de Cartagena compitan con Panamá, con reglas reglamentadas y trámites cortos."),
-D(1,"Paola","Universidad regional","formacion","desemp","Técnicos formados para lo que pide el puerto, el turismo y la industria."),
-D(1,"Ricardo","Gremio de comerciantes","reglas","desemp","Un camino de formalización por etapas para el pequeño comercio.",0,1),
-D(1,"Sofía","Empresa de energía renovable","energia","energia","Aprovechar el viento y el sol del Caribe con conexión a tiempo a la red."),
-D(1,"Hernán","Entidad financiera","credito","desemp","Crédito que llegue a la mipyme de Bolívar y no se quede en Bogotá."),
-D(1,"Natalia","Organización ambiental","clima","hogares","Una ciudad que se anticipa al mar y a las lluvias, no que reacciona."),
-D(1,"Felipe","Gremio logístico","conectividad","comext","Accesos portuarios que no dependan de una sola vía urbana."),
-D(1,"Isabel","Cooperativa agrícola","agua","agro","Distritos de riego que funcionen y centros de acopio cerca del productor.",0,1),
-D(1,"Tomás","Gremio de la construcción","instituciones","hogares","Instituciones regionales con capacidad de ejecutar, con respaldo de la Nación."),
-D(2,"Laura","Gremio industrial","energia","industria","Compartir los datos de consumo y costo energético de nuestros afiliados para sostener el argumento ante el DNP."),
-D(2,"Andrés","Operador portuario","conectividad","comext","Acompañar la ficha técnica de los accesos portuarios con nuestras cifras de carga."),
-D(2,"Marcela","Gremio hotelero","formacion","turismo","Abrir 40 plazas de práctica en hoteles para jóvenes de bachillerato técnico."),
-D(2,"Camilo","Clúster marítimo","reglas","maritimo","Entregar las 26 recomendaciones de la ley de fomento con su norma de soporte."),
-D(2,"Paola","Universidad regional","formacion","desemp","Poner a disposición un grupo de investigación para medir la pertinencia de la oferta."),
-D(2,"Hernán","Entidad financiera","credito","desemp","Diseñar con la Cámara una línea piloto para empresas recién formalizadas.",0,1),
-D(2,"Natalia","Organización ambiental","clima","hogares","Aportar la cartografía de riesgo que ya tenemos levantada."),
-D(2,"Sofía","Empresa de energía renovable","energia","energia","Reportar las solicitudes de conexión represadas para que el dato sea público."),
-D(2,"Diana","Fundación empresarial","brechas","hogares","Conectar nuestros programas de empleabilidad con la agenda de la Junta."),
+D(1,"Laura","ANDI Más País (Seccional Bolívar)","energia","industria","Que Cartagena sea un hub industrial y no solo turístico: con energía confiable, Mamonal puede duplicar su empleo formal."),
+D(1,"Andrés","Puerto de Cartagena","conectividad","comext","Que el puerto se conecte por tren y doble calzada con el interior del país."),
+D(1,"Marcela","Cotelco","conectividad","turismo","Un aeropuerto a la altura de los visitantes que ya tenemos."),
+D(1,"Jorge","Agrem","agua","agro","Riego para Montes de María: el agua para producir no es la misma que el agua para vivir.",0,1),
+D(1,"Diana","Fundación Santo Domingo","brechas","hogares","Que el crecimiento llegue a los barrios que no ven el puerto."),
+D(1,"Camilo","Cámara Marítima Colombiana","reglas","maritimo","Que los astilleros de Cartagena compitan con Panamá, con reglas reglamentadas y trámites cortos."),
+D(1,"Paola","Riescar (Universidades Cartagena)","formacion","desemp","Técnicos formados para lo que pide el puerto, el turismo y la industria."),
+D(1,"Ricardo","Fenalco Bolívar","reglas","desemp","Un camino de formalización por etapas para el pequeño comercio.",0,1),
+D(1,"Sofía","Afinia Grupo EPM","energia","energia","Aprovechar el viento y el sol del Caribe con conexión a tiempo a la red."),
+D(1,"Hernán","Invest In Cartagena & Bolívar","credito","desemp","Crédito que llegue a la mipyme de Bolívar y no se quede en Bogotá."),
+D(1,"Natalia","PDP Canal del Dique","clima","hogares","Una ciudad que se anticipa al mar y a las lluvias, no que reacciona."),
+D(1,"Felipe","FITAC","conectividad","comext","Accesos portuarios que no dependan de una sola vía urbana."),
+D(1,"Isabel","SIAB","agua","agro","Distritos de riego que funcionen y centros de acopio cerca del productor.",0,1),
+D(1,"Tomás","CAMACOL Bolívar","instituciones","hogares","Instituciones regionales con capacidad de ejecutar, con respaldo de la Nación."),
+D(2,"Laura","ANDI Más País (Seccional Bolívar)","energia","industria","Compartir los datos de consumo y costo energético de nuestros afiliados para sostener el argumento ante el DNP."),
+D(2,"Andrés","Puerto de Cartagena","conectividad","comext","Acompañar la ficha técnica de los accesos portuarios con nuestras cifras de carga."),
+D(2,"Marcela","Cotelco","formacion","turismo","Abrir 40 plazas de práctica en hoteles para jóvenes de bachillerato técnico."),
+D(2,"Camilo","Cámara Marítima Colombiana","reglas","maritimo","Entregar las 26 recomendaciones de la ley de fomento con su norma de soporte."),
+D(2,"Paola","Riescar (Universidades Cartagena)","formacion","desemp","Poner a disposición un grupo de investigación para medir la pertinencia de la oferta."),
+D(2,"Hernán","Invest In Cartagena & Bolívar","credito","desemp","Diseñar con la Cámara una línea piloto para empresas recién formalizadas.",0,1),
+D(2,"Natalia","PDP Canal del Dique","clima","hogares","Aportar la cartografía de riesgo que ya tenemos levantada."),
+D(2,"Sofía","Afinia Grupo EPM","energia","energia","Reportar las solicitudes de conexión represadas para que el dato sea público."),
+D(2,"Diana","Fundación Santo Domingo","brechas","hogares","Conectar nuestros programas de empleabilidad con la agenda de la Junta."),
 ];
 const RESERVA=[
 D(1,"Julián","Gremio de transporte","conectividad","comext","El Canal del Dique y el río como corredor de carga."),
@@ -104,34 +202,39 @@ function pinta(){
   const T=datos, V=datos.filter(d=>!d.procesando&&palN[d.palanca]);
   const proc=datos.filter(d=>d.procesando).length;
   const F=V.filter(d=>!filMom||+d.momento===filMom);
-  const orgs=new Set(T.map(d=>(d.organizacion||"").trim().toLowerCase()).filter(Boolean));
+  const orgs=new Set(T.map(d=>sinTildes(nombreOrg(d.organizacion))).filter(Boolean));
   // momentos
   const M=$v("#vzMom");M.innerHTML="";
   [[0,"Todo"],[1,"Visión"],[2,"Compromiso"]].forEach(([k,t])=>{const b=document.createElement("button");b.className="sug"+(k===filMom?" on":"");b.type="button";
     b.textContent=t+" ("+(k?T.filter(d=>+d.momento===k).length:T.length)+")";b.onclick=()=>{filMom=k;pinta()};M.appendChild(b)});
   // kpis
+  /* tres indicadores, cada uno con su color de la paleta */
   $v("#vzKpis").innerHTML=[
-    [T.length,proc?`voces recibidas · ${proc} transcribiéndose`:"voces recibidas, transcritas y ubicadas"],[orgs.size,"organizaciones que hablaron"],
-    [T.filter(d=>+d.momento===2).length,"compromisos concretos"],
-    [VOZ_CONFIG.censoBase+V.length,"afirmaciones en el censo",VOZ_CONFIG.censoBase+" + "+V.length]
-  ].map(k=>`<div class="kpi"><div class="num">${k[0]}${k[2]?`<small>${k[2]}</small>`:""}</div><div class="lab">${k[1]}</div></div>`).join("");
+    [T.length,proc?`voces recibidas · ${proc} transcribiéndose`:"voces recibidas, transcritas y ubicadas","marino"],
+    [orgs.size,"organizaciones que hablaron","petroleo"],
+    [T.filter(d=>+d.momento===2).length,"compromisos concretos","naranja"]
+  ].map(k=>`<div class="kpi k-${k[2]}"><div class="num">${k[0]}</div><div class="lab">${k[1]}</div></div>`).join("");
   // palancas
   const cnt={},org={};PAL.forEach(p=>{cnt[p[0]]=0;org[p[0]]=new Set()});
-  F.forEach(d=>{cnt[d.palanca]++;if(d.organizacion)org[d.palanca].add(d.organizacion.trim())});
+  F.forEach(d=>{cnt[d.palanca]++;if(d.organizacion)org[d.palanca].add(nombreOrg(d.organizacion))});
   const mx=Math.max(1,...Object.values(cnt));
   const P=$v("#vzPal");P.innerHTML="";let fam="";
   PAL.forEach(([id,nom,f])=>{
     if(f!==fam){fam=f;const h=document.createElement("div");h.className="vz-fam";h.textContent=FAM[f];P.appendChild(h)}
-    const o=[...org[id]],os=o.slice(0,5).join(" · ")+(o.length>5?` · y ${o.length-5} más`:"");
+    /* solo el conteo: con 60 organizaciones, listar nombres satura la columna */
+    const o=org[id].size,os=o?o+(o===1?" organización":" organizaciones"):"nadie todavía";
     const b=document.createElement("button");b.type="button";b.className="vz-pal"+(filPal===id?" on":"");
-    b.innerHTML=`<b>${esc(nom)}</b><span class="bar"><i class="f-${f}" style="width:${cnt[id]/mx*100}%"></i></span><span class="n">${cnt[id]}</span><span class="orgs">${o.length?esc(os):"<i>nadie todavía</i>"}</span>`;
+    b.innerHTML=`<b>${esc(nom)}</b><span class="bar"><i class="f-${f}" style="width:${cnt[id]/mx*100}%"></i></span><span class="n">${cnt[id]}</span><span class="orgs">${os}</span>`;
     b.onclick=()=>{filPal=filPal===id?null:id;pinta()};P.appendChild(b)});
   // matriz
   const mm={};let mmx=1;F.forEach(d=>{const k=d.palanca+"|"+d.sector;mm[k]=(mm[k]||0)+1;mmx=Math.max(mmx,mm[k])});
+  /* cada fila toma el color de su familia: territorio petróleo, empresas naranja, gente ámbar.
+     Las celdas vacías van en crema. Así la matriz usa la paleta entera y se lee por bloques. */
+  const TINTA={t:"var(--p1)",e:"var(--inv)",g:"var(--p2)"};
   $v("#vzMat").innerHTML="<tr><th></th>"+SECT.map(s=>`<th title="${esc(s[1])}">${esc(s[2])}</th>`).join("")+"</tr>"+
-    PAL.map(([id,nom])=>"<tr><th class='r'>"+esc(nom)+"</th>"+SECT.map(([s])=>{const n=mm[id+"|"+s]||0;
+    PAL.map(([id,nom,f])=>"<tr><th class='r'>"+esc(nom)+"</th>"+SECT.map(([s])=>{const n=mm[id+"|"+s]||0;
       if(!n)return"<td class='z' style='background:var(--mono)'>·</td>";const pct=Math.round(25+75*n/mmx);
-      return`<td style="background:color-mix(in srgb,var(--p1) ${pct}%,var(--sup));color:${pct>55?"#fff":"var(--ink)"}">${n}</td>`}).join("")+"</tr>").join("");
+      return`<td style="background:color-mix(in srgb,${TINTA[f]} ${pct}%,var(--sup));color:${pct>55?"#fff":"var(--ink)"}">${n}</td>`}).join("")+"</tr>").join("");
   // secciones: una a la vez, para que la vista no se vea saturada
   const SECS=[["nube","Nube de palabras"],["analisis","Palancas y voces"]];
   const S=$v("#vzSecs");S.innerHTML="";
@@ -148,7 +251,7 @@ function pinta(){
     cuenta[k]=(cuenta[k]||0)+1;
     // se muestra la forma con tildes si alguien la dijo asi
     if(!muestra[k]||(w.length>=muestra[k].length&&w!==k))muestra[k]=w;
-    (quienes[k]=quienes[k]||new Set()).add((d.organizacion||"").trim()||"Sin organización");
+    (quienes[k]=quienes[k]||new Set()).add(nombreOrg(d.organizacion)||"Sin organización");
   }));
   const lista=Object.keys(cuenta).filter(w=>VOCAB[w]||cuenta[w]>=MIN_FUERA);
   const maxW=Math.max(1,...lista.map(w=>cuenta[w]));
