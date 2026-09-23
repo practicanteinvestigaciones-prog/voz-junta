@@ -55,6 +55,10 @@ const PREGUNTAS = {
   compromiso: '¿cuál es su compromiso concreto? (algo que su organización hará o aportará)'
 };
 
+// Nucleo curado de palabras de impacto. La IA prefiere estas; si alguien dice otra,
+// se guarda igual y el panel la muestra solo cuando tres o mas personas la repiten.
+const VOCABULARIO = ['vias','puerto','aeropuerto','conectividad','logistica','energia','tarifas','agua','acueducto','riego','dique','clima','erosion','formalizacion','tramites','regulacion','credito','financiamiento','garantias','mipyme','talento','bilinguismo','turismo','industria','agro','empleo','pobreza','inclusion','ruralidad','instituciones'];
+
 // ---------- Montaje ----------
 function configurar() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -297,7 +301,7 @@ function instruccionesLote_(items) {
     '- sector: ' + Object.keys(SECTORES).map(k => k + ' = ' + SECTORES[k]).join(' | '),
     '- resumen: una frase de máximo 20 palabras, en tercera persona y sin adornos.',
     '- confianza: alta si la palanca es evidente; media si hay dos opciones razonables; baja si la respuesta es ambigua o muy general.',
-    '- palabras: de una a tres palabras de impacto que la persona usó o que resumen su idea. Sustantivos en singular y en minúscula (ejemplos: empleo, agua, competitividad, formalización, talento). Nada de verbos ni de frases.',
+    '- palabras: de una a tres palabras de impacto. Escoge SIEMPRE que puedas de esta lista: ' + VOCABULARIO.join(', ') + '. Si lo que dijo la persona de verdad no encaja en ninguna, usa una palabra propia: un sustantivo comun en singular y en minuscula, escrito con sus tildes. Nunca uses articulos, preposiciones, conectores, verbos, nombres propios ni palabras de menos de cuatro letras.',
     '',
     'No inventes nada que la persona no haya dicho. Devuelve un objeto por cada una de las ' + items.length + ' respuestas.',
     '',
