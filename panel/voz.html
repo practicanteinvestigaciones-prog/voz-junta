@@ -1,3 +1,4 @@
+
 <section id="v-voz" class="cont pag" hidden>
   <div class="vz-top">
     <span class="ey">La voz de la Junta · Junta de Juntas 2026</span>
@@ -10,6 +11,18 @@
   <p class="dek">Cada asistente responde dos preguntas con su voz: su visión para Cartagena y Bolívar, y su compromiso concreto. El sistema la transcribe, la ubica en una de las nueve palancas y la suma al censo como una afirmación con dueño y fecha. Hoy entra sin verificar; después pasa por las cuatro capas: norma, dato oficial, referentes y auditoría.</p>
   <div class="sugs" id="vzMom" style="margin-top:14px"></div>
   <div class="vz-kpis" id="vzKpis"></div>
+  <div class="sugs vz-secs" id="vzSecs"></div>
+  <div class="vz-sec" data-sec="nube">
+  <div class="vz-nube-caja">
+    <div class="vz-nube-top">
+      <h2 id="vzNubeT">Las palabras que más se repitieron</h2>
+      <button class="link" id="vzNubeLimpiar" type="button" hidden>Ver todas</button>
+    </div>
+    <div class="vz-nube" id="vzNube"></div>
+    <div class="vz-quienes" id="vzQuienes"></div>
+  </div>
+  </div>
+  <div class="vz-sec" data-sec="analisis">
   <div class="vz-dos">
     <div>
       <h2>Nueve palancas: quién habló de qué</h2>
@@ -20,7 +33,10 @@
       <div class="vz-caja" style="overflow-x:auto"><table class="vz-mat" id="vzMat"></table></div>
 </div>
   </div>
+  </div>
+  <div class="vz-sec" data-sec="analisis">
   <h2 id="vzMuroT">Las voces</h2>
   <div class="vz-muro" id="vzMuro"></div>
   <p class="vz-nota"><strong>Cómo se lee.</strong> La nota de voz se transcribe y una IA propone la palanca y el sector; mientras nadie del equipo la revise, la voz aparece como «ubicada por IA». Cuando el equipo la confirma o la corrige en la hoja, pasa a «validada». Ninguna frase sale del sistema sin esa validación y sin el cotejo con la evidencia.</p>
+  </div>
 </section>
