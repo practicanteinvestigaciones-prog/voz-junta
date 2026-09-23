@@ -1,6 +1,6 @@
 # Plan para el evento — viernes 25 de septiembre de 2026
 
-Estado al miércoles 23. El sistema está corriendo y probado con carga. Falta la pieza de logos y el habeas data.
+Estado al miércoles 23 por la tarde. El sistema está corriendo, probado con carga y con la autorización de datos resuelta. Falta el ensayo con teléfonos reales.
 
 ## Lo que ya funciona
 
@@ -25,15 +25,46 @@ Decisiones tomadas sobre la nube:
 - **Logos al tocar la palabra.** La nube se mantiene limpia; al tocar una palabra, aparecen abajo las organizaciones que la dijeron. Mientras no haya catálogo de logos, cada una sale con un escudo de iniciales.
 - **Dos secciones, no cinco.** La vista muestra *Nube de palabras* o *Palancas y voces*, una a la vez. Al proyectar se esconde el texto explicativo y la pieza ocupa la pantalla.
 
+**Clasificación por palancas.** Se rehízo con el *Resumen ejecutivo PND Cartagena–Bolívar v6* como fuente. Cada palanca lleva ahora su definición larga y un **mapa de términos** sacado del documento —el aeropuerto y Bayunca en conectividad, el régimen de la Costa Caribe en energía, el Canal del Dique y María la Baja en agua, la formalización progresiva y la Ventanilla Única en reglas—. Encima van nueve **reglas de desempate** para las confusiones que aparecían en las pruebas:
+
+- Un **sector** no es una palanca. «Turismo», «puerto», «industria» nombran desde dónde habla la persona; la palanca es la condición que pide mover.
+- **Puerto**: dragado, canal y corredor de carga son conectividad; aduana y trámites son reglas.
+- **Agua vs. clima**: acueducto, riego y Canal del Dique son agua; erosión costera y adaptación son clima.
+- **Energía vs. clima**: renovables, gas y tarifas son energía; solo es clima cuando el punto son las emisiones o los ecosistemas.
+- **Informalidad**: de empresas es reglas; de personas y sus ingresos es brechas.
+- **Empleo**: generarlo y cerrar brechas de ingreso es brechas; formar para él es formación.
+- **Plata**: crédito y garantías para producir es crédito; presupuesto, regalías y vigencias futuras es instituciones.
+
+Van también ocho ejemplos resueltos y una **pista determinista**: antes de llamar a la IA, el script cuenta cuántos términos de cada palanca aparecen en la respuesta y le pasa las tres primeras como señal de apoyo —no como respuesta—. Probada contra doce casos de control, la pista acierta la palanca en once; el doceavo es una frase deliberadamente vaga («que Cartagena sea potencia turística») y devuelve «sin señal», que es lo correcto: ahí decide la IA y marca confianza baja.
+
+**Formulario.** Tres cambios:
+
+- **Todos los campos son obligatorios**, cargo incluido. El botón de enviar queda apagado y arriba se lista lo que falta, que se va tachando solo. Así no entra una voz sin organización o sin compromiso.
+- **Una sola respuesta por teléfono.** Al enviar, el teléfono guarda una marca; si la persona vuelve a abrir el enlace, ve «ya recibimos su respuesta». Se quitó el botón de «Enviar otra respuesta». Es un freno, no una garantía: se salta con una ventana de incógnito u otro teléfono, y sirve para los reenvíos por error, que son la mayoría en un evento presencial. Para los duplicados que se cuelen, la hoja se revisa por nombre + organización y se usa la casilla `ocultar`.
+- **Autocompletado de organización** con las 60 invitadas, que es lo que hace que «CCC», «la Cámara» y «Cámara de Comercio de Cartagena» sean una sola organización en el panel y no tres.
+
+**Paleta e identidad.** El panel usa la paleta de la Cámara —marino, petróleo, naranja, ámbar y crema—, aplicada solo a la vista «La voz de la Junta» y al modo proyección. Las tres familias de palancas toman tres colores distintos: territorio petróleo, empresas naranja, gente ámbar.
+
+**Las 60 organizaciones.** Están en el panel con su nombre oficial, su sigla y las otras formas en que la gente las escribe. Cada una sale con un escudo de sigla en los colores de la paleta. Para poner el logo real de alguna, se agrega su archivo o su dirección en `LOGOS` dentro de `panel/voz.js`, con el nombre oficial como clave: los logos hay que verificarlos uno por uno, porque un logo equivocado proyectado delante del gerente de esa empresa es peor que no tener logo.
+
+**Habeas data.** Resuelto, y por la vía simple: el ejercicio se declara **público**. Se decidió así porque lo que se recoge no es sensible —nombre, organización, cargo y una respuesta— y porque el propósito mismo del ejercicio es que esas voces se vean: se proyectan en la sala y entran en los documentos de incidencia. Pedir cédula o correo habría agrandado el problema sin agregar nada.
+
+El formulario lo dice de frente, en un recuadro arriba de la casilla: «Esto es un ejercicio público. Su nombre, su organización y lo que responda se proyectan en la sala y quedan en los documentos de incidencia. No escriba ni diga nada que no quiera que se conozca.» Debajo va la autorización completa, desplegable: quién responde por los datos, qué se recoge, para qué, los derechos del titular y cómo ejercerlos por el canal de PQRSD de la Cámara.
+
+Dos puntos que valía la pena cubrir y quedaron cubiertos:
+
+- **La nota de voz.** Una grabación puede considerarse dato biométrico si se usa para identificar a alguien por su voz. Aquí no: se transcribe y se trabaja sobre el texto. El documento lo dice expresamente —no hay reconocimiento de voz ni tratamiento biométrico—, que es lo que mantiene la grabación fuera de la categoría de dato sensible.
+- **La revocatoria.** Se puede pedir en cualquier momento, pero el texto aclara que lo ya proyectado o ya publicado no se puede deshacer. Prometer lo contrario habría sido prometer algo imposible de cumplir.
+
+Los datos del responsable —dirección, teléfono, canal de PQRSD, enlace a la política— salen de la página oficial de la Cámara y viven en un solo bloque del formulario, así que se corrigen en un lugar. **El texto no lo redactó un abogado:** conviene que la oficina jurídica lo revise antes del viernes, pero no bloquea.
+
 ## Lo que falta
 
 | Qué | Quién | Por qué bloquea |
 | --- | --- | --- |
-| **Lista de organizaciones invitadas** | Yolvis | Sin ella no hay catálogo de logos y todas salen con escudo de iniciales |
-| **Habeas data del formulario** | Yolvis, con la Secretaría | El texto de autorización actual está mal. Sin autorización bien redactada, las voces se recogen en falso |
 | Ensayo con teléfonos reales | Equipo | Es lo único del camino que no se ha probado de punta a punta: grabar desde un celular, en el sitio, con el wifi del sitio |
-| Bajar la grabación de 90 a 60 segundos | — | Transcribir es lo caro; 60 segundos alcanzan |
-| Quitar el diagnóstico temporal del backend | — | Antes de congelar el código el jueves |
+| Logos reales de las organizaciones | Yolvis | Opcional. Sin ellos, cada organización sale con su escudo de sigla, que ya se ve bien |
+| Congelar el código | — | El jueves, después del ensayo |
 
 ## Riesgos y plan B
 
@@ -43,6 +74,7 @@ Decisiones tomadas sobre la nube:
 | Gemini se satura | Cuatro modelos de respaldo por etapa; un 503 no gasta intentos y la fila vuelve a la cola |
 | La IA ubica mal una palanca | La columna `*_palanca_validada` manda sobre la de la IA; se corrige en la hoja y el panel se actualiza en 20 segundos |
 | Una palabra sobra en la nube | Se corrige en la hoja y desaparece de la pantalla en el siguiente refresco |
+| Alguien manda dos respuestas saltándose el freno | Se detecta en la hoja por nombre + organización y se oculta con la casilla `ocultar` |
 | Alguien graba algo inapropiado | La casilla `ocultar` saca esa voz del panel al instante, sin borrarla |
 
 **El viernes no se estrena nada.** Todo lo que se proyecte tiene que haber corrido el jueves, con gente real y en el sitio.
