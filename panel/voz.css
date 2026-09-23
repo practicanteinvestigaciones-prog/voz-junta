@@ -22,7 +22,7 @@
 .vz-pal .bar{height:14px;border-radius:4px;background:var(--mono);overflow:hidden}
 .vz-pal .bar i{display:block;height:100%;border-radius:4px;transition:width .6s}
 .vz-pal .n{font-family:Archivo,sans-serif;font-weight:800;font-size:16px;text-align:right;font-variant-numeric:tabular-nums}
-.vz-pal .orgs{grid-column:2 / 4;font-family:Archivo,sans-serif;font-size:11.5px;color:var(--ink2);line-height:1.35}
+.vz-pal .orgs{grid-column:2 / 4;font-family:Archivo,sans-serif;font-size:11.5px;font-weight:600;color:var(--gris);line-height:1.3;margin-top:1px}
 .f-t{background:var(--p1)}.f-e{background:var(--inv)}.f-g{background:var(--p2)}
 .vz-mat{width:100%;border-collapse:separate;border-spacing:3px;font-family:Archivo,sans-serif;font-size:12.5px}
 .vz-mat th{font-size:9.5px;letter-spacing:.04em;padding:0 2px 6px;border:0;text-align:center;vertical-align:bottom;line-height:1.15}
@@ -44,7 +44,6 @@
 .vz-voz .audio svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
 .vz-falta li{margin:0 0 8px;font-size:14.5px;color:var(--ink2)}
 .vz-falta li b{font-family:Archivo,sans-serif;font-size:12px;color:var(--ink)}
-.vz-nota{border-left:4px solid var(--oro);background:var(--crema);padding:10px 14px;font-size:14px;margin:18px 0 0;border-radius:0 8px 8px 0;max-width:none}
 .vz-vacio{color:var(--gris);font-size:14.5px;padding:10px 0}
 /* modo proyección */
 body.proyectar .shell{grid-template-columns:1fr}
@@ -87,9 +86,82 @@ body.proyectar .vz-secs{margin:18px 0 2px}
 body.proyectar .vz-secs .sug{font-size:15px;padding:9px 18px}
 
 /* al proyectar, la sala ve la pieza — no el texto explicativo */
-body.proyectar #v-voz .dek,body.proyectar #v-voz .vz-nota{display:none}
+body.proyectar #v-voz .dek{display:none}
 body.proyectar #v-voz h1{font-size:40px;margin:2px 0 10px}
 body.proyectar #v-voz .vz-kpis{margin:10px 0 2px;gap:10px}
 body.proyectar #v-voz .vz-kpis .kpi{padding:10px 14px}
 body.proyectar #v-voz .vz-kpis .num{font-size:30px}
 body.proyectar .vz-nube{min-height:340px}
+
+/* ===== Paleta institucional de la Cámara de Comercio de Cartagena =====
+   Cinco colores. Se aplican SOLO a la vista «La voz de la Junta» y al modo
+   proyección, redefiniendo las variables del prototipo dentro de #v-voz:
+   así toda la vista (nube, palancas, matriz, muro) cambia de una, sin tocar
+   el resto del sistema de inteligencia territorial.
+     marino   #073A56   petróleo #017C9C   naranja #E0691B
+     ámbar    #F8A432   crema    #E4D0BD
+   Las tres familias de palancas toman tres colores distintos de la paleta:
+   territorio = petróleo · empresas = naranja · gente = ámbar. */
+#v-voz{
+  --ccc-marino:#073A56; --ccc-petroleo:#017C9C; --ccc-naranja:#E0691B;
+  --ccc-ambar:#F8A432;  --ccc-crema:#E4D0BD;
+  --p1:#017C9C; --p1d:#073A56; --p2:#F8A432; --inv:#E0691B;
+  --acc:#E0691B; --oro:#F8A432;
+  --ink:#073A56; --ink2:#3C5B71; --gris:#7A8B98;
+  --sup:#FFFFFF; --crema:#F6EEE5; --mono:#E4D0BD; --linea:#DCCDBB;
+  --ok:#017C9C; --warn:#E0691B; --bad:#B23A1A;
+}
+/* el mismo juego, en oscuro: fondo marino y la paleta aclarada para que
+   contraste sobre él (el prototipo enciende el oscuro con data-theme) */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) #v-voz{
+    --p1:#3FA8C9; --p1d:#0B3A54; --p2:#F8C86A; --inv:#F58A3C;
+    --acc:#F58A3C; --oro:#F8A432;
+    --ink:#EAF1F6; --ink2:#B6CBD9; --gris:#8AA3B4;
+    --sup:#0B3A54; --crema:#123F5A; --mono:#1B4C68; --linea:#1F546F;
+    --ok:#3FA8C9; --warn:#F8A432; --bad:#E0704A;
+  }
+}
+:root[data-theme="dark"] #v-voz{
+  --p1:#3FA8C9; --p1d:#0B3A54; --p2:#F8C86A; --inv:#F58A3C;
+  --acc:#F58A3C; --oro:#F8A432;
+  --ink:#EAF1F6; --ink2:#B6CBD9; --gris:#8AA3B4;
+  --sup:#0B3A54; --crema:#123F5A; --mono:#1B4C68; --linea:#1F546F;
+  --ok:#3FA8C9; --warn:#F8A432; --bad:#E0704A;
+}
+/* el punto «en vivo» del menú también es de la paleta */
+.nv .vivo{background:#E0691B;box-shadow:0 0 0 0 rgba(224,105,27,.6)}
+@keyframes latido{0%{box-shadow:0 0 0 0 rgba(224,105,27,.6)}70%{box-shadow:0 0 0 8px rgba(224,105,27,0)}100%{box-shadow:0 0 0 0 rgba(224,105,27,0)}}
+/* la nube: un punto más de peso al marino para que la palabra grande ancle */
+#v-voz .vz-w{color:var(--ccc-marino,#073A56)}
+#v-voz .w-t{color:var(--p1)}
+#v-voz .w-e{color:var(--inv)}
+#v-voz .w-g{color:var(--p2)}
+#v-voz .w-otra{color:var(--gris)}
+#v-voz .vz-esc img{background:#FFFFFF;padding:2px}
+
+/* ===== los cinco colores, cada uno con su trabajo =====
+   marino  estructura y cifras     petróleo territorio
+   naranja empresas y lo activo    ámbar    gente
+   crema   los fondos y los vacíos                        */
+#v-voz .vz-kpis .kpi{border-top:4px solid var(--linea);position:relative}
+#v-voz .vz-kpis .k-marino{border-top-color:var(--ccc-marino,#073A56)}
+#v-voz .vz-kpis .k-petroleo{border-top-color:var(--p1)}
+#v-voz .vz-kpis .k-naranja{border-top-color:var(--acc)}
+#v-voz .vz-kpis .k-marino .num{color:var(--ccc-marino,#073A56)}
+#v-voz .vz-kpis .k-petroleo .num{color:var(--p1)}
+#v-voz .vz-kpis .k-naranja .num{color:var(--acc)}
+/* la nube se para sobre el crema: es el color que faltaba por usar */
+#v-voz .vz-nube-caja{background:var(--crema);border-color:var(--mono)}
+/* la barra de cada palanca sobre crema, y el conteo alineado con la barra */
+#v-voz .vz-pal .bar{background:var(--mono)}
+#v-voz .vz-pal .n{color:var(--ccc-marino,#073A56)}
+/* la fila de la matriz se lee por familia: el encabezado toma su color */
+#v-voz .vz-mat th.r{color:var(--ink)}
+#v-voz .vz-mat td.z{color:var(--gris)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) #v-voz .vz-kpis .k-marino{border-top-color:#EAF1F6}
+  :root:not([data-theme="light"]) #v-voz .vz-kpis .k-marino .num{color:#EAF1F6}
+}
+:root[data-theme="dark"] #v-voz .vz-kpis .k-marino{border-top-color:#EAF1F6}
+:root[data-theme="dark"] #v-voz .vz-kpis .k-marino .num{color:#EAF1F6}
