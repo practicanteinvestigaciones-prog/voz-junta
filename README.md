@@ -7,12 +7,16 @@ Cada asistente escanea un QR, responde **dos preguntas** (visión y compromiso) 
 ## Cómo funciona
 
 ```
-Celular ──► Apps Script (doPost) ──► Drive (audio) + Hoja "Voces"
+Celular ──► Apps Script (doPost) ──► Drive (audio + ficha)
                                           │
-                        cada minuto ──► Gemini: transcribe y clasifica
+              cada minuto ──► arma las filas en la hoja "Voces"
+                         ──► Gemini clave 1: audio → texto
+                         ──► Gemini clave 2: texto → palanca, sector, resumen y palabras
                                           │
                        Apps Script (doGet, con clave) ──► Panel en pantalla
 ```
+
+Las dos etapas usan **claves de proyectos de Google Cloud distintos**, para que cada una tenga su propio cupo y su propia tarea.
 
 ## Qué hay en este repositorio
 
@@ -20,28 +24,29 @@ Celular ──► Apps Script (doPost) ──► Drive (audio) + Hoja "Voces"
 | --- | --- |
 | `index.html` | Página de captura. Es la que se publica en GitHub Pages y la que abre el QR. |
 | `apps_script/Codigo.gs` | Backend completo: recepción, guardado en Drive, transcripción y clasificación con Gemini, y entrega de datos al panel. Se pega en un proyecto de Google Apps Script. |
-| `panel/voz.js`, `panel/voz.css`, `panel/voz.html` | Vista «La voz de la Junta» del panel: indicadores, nueve palancas, matriz palanca × sector, muro de voces y modo proyección. |
-| `panel/build.py` | Inserta esas tres piezas dentro del prototipo del sistema de inteligencia territorial y genera el HTML final. |
-| `panel/Sistema_inteligencia_territorial_prototipo_v2.html` | El panel ya compilado, listo para proyectar. |
+| `panel/voz.js`, `panel/voz.css`, `panel/voz.html` | Vista «La voz de la Junta» del panel, en dos secciones: **Nube de palabras** (las palabras crecen según cuántas personas las dijeron; al tocar una aparecen las organizaciones que la dijeron, con su logo o su escudo de iniciales) y **Palancas y voces** (indicadores, las nueve palancas, la matriz palanca × sector y el muro de voces). Incluye el modo proyección. |
+| `panel/build.py` | Inserta esas tres piezas dentro del prototipo del sistema de inteligencia territorial y genera el HTML final del panel. |
 | `carteles_qr.html` | Generador del cartel A4 con el QR. Se abre en el navegador, se pega la dirección pública y se imprime. |
 | `LEEME_montaje.md` | Pasos de montaje de principio a fin. |
-| `PLAN.md` | Plan de trabajo y decisiones pendientes. |
+| `PLAN.md` | Estado del proyecto, decisiones y pendientes. |
 
 ## Lo que NO está aquí, a propósito
 
-- **Ninguna clave.** Ni la de Gemini ni la del panel. La de Gemini va en *Configuración del proyecto → Propiedades del script* (`GEMINI_API_KEY`). La del panel la genera el propio script (`PANEL_TOKEN`) y se pasa al proyectar: `...panel.html?clave=LA_CLAVE`.
-- **La dirección del backend ni el ID de la hoja.** `SHEET_ID` viene como marcador de posición, y el panel se abre pasándole la fuente y la clave: `panel.html?fuente=<dirección que termina en /exec>&clave=<clave del panel>`.
+- **Ninguna clave.** Ni las de Gemini ni la del panel. Las de Gemini van en *Configuración del proyecto → Propiedades del script* (`GEMINI_API_KEY` y `GEMINI_API_KEY_2`). La del panel la genera el propio script (`PANEL_TOKEN`) y se pasa al proyectar: `...panel.html?clave=LA_CLAVE`.
+- **El ID de la hoja.** `SHEET_ID` viene como marcador de posición. El panel se abre pasándole la fuente y la clave: `panel.html?fuente=<dirección que termina en /exec>&clave=<clave del panel>`.
+- **El panel ya compilado.** Se genera con `panel/build.py`, porque lleva dentro el prototipo del sistema de inteligencia territorial, que no es parte de este repositorio. Para armarlo: poner el prototipo como `original.html` dentro de `panel/` y ejecutar `python3 build.py`.
+- **Las respuestas de las personas.** No están aquí ni lo estarán.
 
-Quien clone este repositorio obtiene **el sistema completo, no los datos**. Las respuestas de las personas viven en la hoja y en la carpeta de Drive de la entidad, y solo las ve quien tenga permiso sobre ellas.
+Quien clone este repositorio obtiene **el sistema completo, no los datos**. Las respuestas viven en la hoja y en la carpeta de Drive de la entidad, y solo las ve quien tenga permiso sobre ellas.
 
 ## Montaje rápido
 
 1. Crear una hoja de cálculo en Google Sheets y copiar su ID.
 2. Crear un proyecto en [script.google.com](https://script.google.com), pegar `apps_script/Codigo.gs` y poner ese ID en `SHEET_ID`.
-3. En *Propiedades del script*, agregar `GEMINI_API_KEY`.
-4. Ejecutar `configurar()` una vez. Crea la hoja `Voces`, la carpeta de audios en Drive, el disparador de cada minuto y la clave del panel (queda en el registro de ejecución).
+3. En *Propiedades del script*, agregar `GEMINI_API_KEY` (transcripción) y `GEMINI_API_KEY_2` (clasificación). Deben ser de **dos proyectos de Google Cloud distintos**: los límites de Gemini se aplican por proyecto, no por clave, así que dos claves del mismo proyecto comparten cupo y no sirven de nada.
+4. Ejecutar `configurar()` una vez. Crea la hoja `Voces`, la carpeta de audios y la bandeja en Drive, el disparador de cada minuto y la clave del panel (queda en el registro de ejecución).
 5. Implementar como aplicación web, con acceso *Cualquier usuario*. Copiar la dirección que termina en `/exec`.
-6. Pegar esa dirección en `index.html` (`CONFIG.url`) y publicar con GitHub Pages.
+6. Pegar esa dirección en `index.html` (`CONFIG.url`) y revisar en el mismo bloque `CONFIG` los datos del responsable del tratamiento: `entidadLegal`, `direccion`, `telefono`, `pqrsdUrl` y `politicaUrl`. De ahí sale el texto de la autorización. Publicar con GitHub Pages.
 7. Generar el cartel con `carteles_qr.html` e imprimirlo.
 
 Los detalles están en `LEEME_montaje.md`.
@@ -50,10 +55,19 @@ Los detalles están en `LEEME_montaje.md`.
 
 Desde el editor de Apps Script:
 
-- `verificarGemini()` — confirma la clave y prueba una clasificación.
-- `probarUltimoAudio()` — transcribe y clasifica la última nota de voz recibida, sin tocar la hoja.
+- `verificarClaves()` — confirma que las dos claves responden y con qué modelo.
+- `pruebaCarga200()` — simula 200 envíos (408 voces) y mide cuánto tarda el sistema completo.
+- `borrarPruebas()` — deja la hoja limpia después de la simulación.
 - `reintentarErrores()` — devuelve a la cola las filas que quedaron en error.
 
 ## Datos personales
 
-El formulario pide autorización explícita (Ley 1581 de 2012) antes de enviar. Los audios quedan en una carpeta de Drive de la entidad, las respuestas en la hoja, y el panel solo entrega datos con la clave. La columna `ocultar` saca una voz del panel sin borrarla.
+**Este es un ejercicio público, y el formulario lo dice de frente.** Lo que la persona responde se proyecta en la sala con su nombre y su organización, y entra en los documentos de incidencia. El aviso aparece arriba de la casilla, no en la letra menuda.
+
+El formulario pide autorización previa, expresa e informada (Ley 1581 de 2012 y Decreto 1074 de 2015) antes de enviar, y despliega el texto completo: quién responde por los datos, qué se recoge, para qué, los derechos del titular y cómo ejercerlos. Los datos del responsable —dirección, teléfono, canal de PQRSD, enlace a la política— se editan en un solo lugar, el bloque `CONFIG` de `index.html`, y el texto se arma solo con ellos.
+
+Se recogen solo cuatro cosas: nombre, organización, cargo y la respuesta (voz o texto). No se pide cédula, ni correo, ni teléfono.
+
+La nota de voz se trata por su contenido: se transcribe y se trabaja sobre el texto. **No se hace reconocimiento de voz ni ningún tratamiento biométrico.** Los audios quedan en una carpeta de Drive de la entidad, las respuestas en la hoja, y el panel solo entrega datos con la clave. La columna `ocultar` saca una voz del panel sin borrarla.
+
+> El texto lo redactó el equipo del proyecto, no un abogado. Antes de un evento nuevo conviene que la oficina jurídica de la entidad lo revise.
