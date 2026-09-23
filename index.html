@@ -43,6 +43,20 @@ input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;borde
 .lista audio{height:34px;max-width:100%}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink2);margin:0}
 .consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:#0D5A60}
+.publico{margin:0 0 12px;padding:11px 13px;border-radius:12px;background:#FFF6E8;border:1.5px solid #F8A432;font-size:14.5px;line-height:1.45;color:#5A3A00}
+.publico b{font-weight:800}
+.hd{margin-top:12px;border-top:1px solid var(--linea);padding-top:10px}
+.hd>summary{cursor:pointer;font-family:Archivo,sans-serif;font-size:13.5px;font-weight:700;color:var(--p1)}
+.hd>summary::marker{color:var(--p1)}
+.hd h3{font-family:Archivo,sans-serif;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--gris);margin:14px 0 4px}
+.hd p,.hd li{font-size:14px;line-height:1.5;margin:0 0 7px}
+.hd ul{margin:0 0 7px;padding-left:19px}
+.hd a{color:var(--p1)}
+.falta{margin:0 0 10px;padding:11px 13px;border-radius:12px;background:#FFF6E8;border:1.5px solid #F8A432;font-size:14.5px;line-height:1.45;color:#5A3A00}
+.falta b{display:block;margin-bottom:3px;font-weight:700}
+.falta ul{margin:0;padding-left:18px}
+.enviar:disabled{opacity:.45;cursor:not-allowed}
+.caja.pide{box-shadow:0 0 0 2px #F8A432 inset}
 .consent label{font-family:"Source Serif 4",Georgia,serif;font-weight:400;font-size:14px;margin:0;color:var(--ink2)}
 .enviar{width:100%;background:#F25100;color:#fff;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;margin-top:4px}
 .enviar:disabled{opacity:.6}
@@ -76,8 +90,9 @@ textarea{margin-top:8px}
       <div id="yoVista" class="yo" hidden><span><b id="yoNom"></b><span id="yoOrg"></span></span><button type="button" class="link" id="yoCambiar">Cambiar</button></div>
       <div id="yoForm">
         <label for="nombre">Nombre</label><input type="text" id="nombre" autocomplete="name" required>
-        <label for="org">Organización o gremio</label><input type="text" id="org" autocomplete="organization" required>
-        <label for="rol">Cargo o rol <small>(opcional)</small></label><input type="text" id="rol" autocomplete="organization-title">
+        <label for="org">Organización o gremio</label><input type="text" id="org" list="orgs" autocomplete="off" required>
+        <p class="ayuda" style="margin:4px 0 0">Empiece a escribir y escoja de la lista. Si no aparece, escríbala completa.</p>
+        <label for="rol">Cargo o rol</label><input type="text" id="rol" autocomplete="organization-title" required>
       </div>
     </section>
 
@@ -106,18 +121,22 @@ textarea{margin-top:8px}
     <p class="ayuda" id="sinMic" hidden>Este teléfono no permite grabar desde la página. Use «Prefiero escribir» o dicte con el micrófono del teclado.</p>
 
     <section class="caja">
+      <h2><span class="n">4</span>Autorización</h2>
+      <div class="publico" id="avisoPublico"></div>
       <div class="consent"><input type="checkbox" id="acepto"><label for="acepto" id="lAcepto"></label></div>
+      <details class="hd"><summary>Ver la autorización completa</summary><div id="hdTexto"></div></details>
     </section>
 
+    <div class="falta" id="falta" hidden></div>
     <button class="enviar" id="enviar" type="submit">Enviar mis respuestas</button>
     <p class="err" id="err" role="alert"></p>
   </form>
+  <datalist id="orgs"><option value="Cámara de Comercio de Cartagena"><option value="Consejo Gremial de Bolívar"><option value="Congresistas de Bolívar"><option value="Alcaldía de Cartagena de Indias"><option value="Gobernación de Bolívar"><option value="ACOPI Bolívar"><option value="Afinia Grupo EPM"><option value="ANATO Noroccidente"><option value="Asociación Náutica de Colombia"><option value="ANDI Más País (Seccional Bolívar)"><option value="ASOTELCA"><option value="CAMACOL Bolívar"><option value="Convention &amp; Visitors Bureau"><option value="Comfenalco"><option value="Cotelco"><option value="Fenalco Bolívar"><option value="FENDIPETROLEO"><option value="FITAC"><option value="Fundación Santo Domingo"><option value="Fundación Serena del Mar"><option value="Fundación Tenaris TuboCaribe"><option value="Grupo Argos Fundación"><option value="Lonja de Propiedad Raíz"><option value="Ruta Costera | Isa VÍAS"><option value="SIAB"><option value="Sociedad de Mejoras Públicas"><option value="Undetco"><option value="Agrem"><option value="Acodrés"><option value="Fundación Centro Histórico"><option value="Analdex"><option value="Agentucol"><option value="Amcham Cartagena"><option value="Asonav"><option value="Traso"><option value="Fundación Grupo Social"><option value="Riescar (Universidades Cartagena)"><option value="Asiesca (Universidades Caribe)"><option value="Basc"><option value="Cámara Marítima Colombiana"><option value="Armcol"><option value="Círculo de Obreros"><option value="CCI"><option value="Funcicar"><option value="Cartagena Cómo Vamos"><option value="Comisión Regional de Competitividad"><option value="Invest In Cartagena &amp; Bolívar"><option value="Comité Intergremial del Atlántico"><option value="CTP Cartagena"><option value="RAP Caribe"><option value="CUEE"><option value="Fundación Puerto de Cartagena"><option value="Sacyr"><option value="Oinac"><option value="Odinsa"><option value="Puerto de Cartagena"><option value="Refinería"><option value="Cementos Argos"><option value="PDP Canal del Dique"><option value="Diálogo Social"></datalist>
 
   <section class="caja gracias" id="gracias" hidden>
     <div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
     <h2>Recibimos sus respuestas</h2>
     <p class="ayuda" id="grTxt" style="margin:6px auto 0;max-width:34ch"></p>
-    <button class="btn2" id="otra" type="button">Enviar otra respuesta</button>
   </section>
 </main>
 
@@ -125,15 +144,64 @@ textarea{margin-top:8px}
 /* ============ CONFIGURACIÓN ============ */
 const CONFIG={
   url:"https://script.google.com/macros/s/AKfycbyGne7zqC6WsRhywjNrPFvM1GsaRNVbkY_5feZUfxIo1v6_zJseTKpN5iVygE64d7zJ/exec",            // URL del Apps Script (termina en /exec). Vacía = modo de prueba (no guarda).
-  politicaUrl:"",    // enlace a la política de tratamiento de datos de la Cámara
+  maxSeg:60,         // duración máxima de cada nota de voz
+  /* ---- Responsable del tratamiento (Ley 1581 de 2012) ----
+     Datos tomados de cccartagena.org.co/es/proteccion-de-datos-personales.
+     Si cambian, se corrigen aquí y el texto de autorización se actualiza solo. */
   entidad:"la Cámara de Comercio de Cartagena",
-  maxSeg:90          // duración máxima de cada nota de voz
+  entidadLegal:"Cámara de Comercio de Cartagena",
+  direccion:"Manga, Calle 28 No. 27-23, Edificio Seaport 3, Cartagena, Bolívar",
+  telefono:"(+57) 605 642 8999",
+  pqrsdUrl:"https://www.cccartagena.org.co/pqrsd",
+  politicaUrl:"https://www.cccartagena.org.co/recursos/docs/pdfs/manual-de-politicas-de-proteccion-de-datos-personales.pdf",
+  evento:"la Junta de Juntas del Plan Nacional de Desarrollo 2026-2030"
 };
 
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
 if(!CONFIG.url)$("#modoPrueba").hidden=false;
-$("#lAcepto").innerHTML=`Autorizo a ${CONFIG.entidad} a guardar mis respuestas y mis notas de voz, a transcribirlas y clasificarlas con una herramienta de inteligencia artificial, y a usar mi nombre, mi organización y lo que dije en el evento y en los documentos de incidencia que se deriven de él.`+(CONFIG.politicaUrl?` <a href="${CONFIG.politicaUrl}" target="_blank" rel="noopener">Política de tratamiento de datos</a>.`:"");
+/* ============ AUTORIZACIÓN DE DATOS (Ley 1581 de 2012) ============
+   Este ejercicio es público: lo que la persona diga se proyecta en la sala y
+   entra en los documentos de incidencia. Por eso la autorización lo dice de
+   frente, arriba y en la casilla, y no solo en la letra menuda. */
+const enl=(u,t)=>u?`<a href="${u}" target="_blank" rel="noopener">${t}</a>`:t;
+
+$("#avisoPublico").innerHTML=`<b>Esto es un ejercicio público.</b> Su nombre, su organización y lo que responda se proyectan en la sala durante ${CONFIG.evento} y quedan en los documentos de incidencia que salgan de ella. No escriba ni diga nada que no quiera que se conozca.`;
+
+$("#lAcepto").innerHTML=`Autorizo a ${CONFIG.entidad} a tratar mis datos personales y mi nota de voz para los fines que se describen abajo, y entiendo que mi nombre, mi organización y lo que respondo son <b>públicos</b>.`;
+
+$("#hdTexto").innerHTML=`
+<h3>Quién responde por sus datos</h3>
+<p>${CONFIG.entidadLegal}, responsable del tratamiento. ${CONFIG.direccion}. Teléfono ${CONFIG.telefono}.
+${CONFIG.politicaUrl?`Su política completa está en la ${enl(CONFIG.politicaUrl,"Política de tratamiento de datos personales")}.`:""}</p>
+
+<h3>Qué se recoge</h3>
+<p>Su nombre, su organización, su cargo, la nota de voz o el texto con el que responde las dos preguntas, y la fecha y hora del envío. Nada más: no se pide cédula, ni correo, ni teléfono.</p>
+
+<h3>Para qué</h3>
+<ul>
+<li>Transcribir su nota de voz y ubicar su respuesta en una de las nueve palancas del sistema de inteligencia territorial, con ayuda de una herramienta de inteligencia artificial.</li>
+<li>Proyectar en vivo, durante el evento, su nombre, su organización y lo que respondió.</li>
+<li>Incluir su respuesta, con su nombre y su organización, en los documentos de incidencia de la región ante el Departamento Nacional de Planeación, los ministerios y el Congreso, y en las publicaciones, la página web y las redes de la Cámara.</li>
+<li>Guardar el consolidado como memoria del ejercicio.</li>
+</ul>
+<p>Sus datos no se venden, no se entregan a terceros con fines comerciales ni se usan para enviarle publicidad.</p>
+
+<h3>Sobre la nota de voz</h3>
+<p>La grabación se usa por lo que usted dice, no por cómo suena su voz: se transcribe a texto y se trabaja sobre el texto. <b>No se hace reconocimiento de voz ni ningún tratamiento biométrico</b>, y la grabación no se usa para identificarlo. Los audios quedan en una carpeta de la Cámara con acceso restringido al equipo del ejercicio.</p>
+
+<h3>Es voluntario</h3>
+<p>Participar es libre y voluntario. Puede escribir en vez de grabar, o no participar del todo, y eso no le afecta en nada. Si decide participar, el formulario pide las dos respuestas completas, para que su voz quede bien ubicada.</p>
+
+<h3>Sus derechos</h3>
+<p>Como titular usted puede, en cualquier momento: conocer, actualizar y rectificar sus datos; pedir prueba de esta autorización; ser informado sobre el uso que se les ha dado; revocar la autorización o pedir que sus datos se supriman; y acceder gratuitamente a ellos. Presentar quejas ante la Superintendencia de Industria y Comercio también es su derecho.</p>
+<p>Para ejercerlos, escriba por ${enl(CONFIG.pqrsdUrl,"el canal de PQRSD de la Cámara")} o llame al ${CONFIG.telefono}.</p>
+<p>Si revoca la autorización, su voz sale del panel y no se incluye en los documentos que aún no se hayan publicado. Lo que ya se proyectó en la sala o ya se publicó no se puede deshacer.</p>
+
+<h3>Cuánto tiempo se guardan</h3>
+<p>Mientras dure el ejercicio de incidencia en el Plan Nacional de Desarrollo 2026-2030 y el tiempo adicional que exijan las normas aplicables. Después se conserva el consolidado como memoria del evento.</p>
+
+<p style="margin-top:12px;color:var(--gris);font-size:13px">Al marcar la casilla usted da una autorización previa, expresa e informada, en los términos de la Ley 1581 de 2012 y el Decreto 1074 de 2015. Queda registrada la fecha y hora del envío como prueba de la autorización.</p>`;
 
 /* ============ IDENTIFICACIÓN ============ */
 function pintaYo(){const y=ls.get("vozYo",null);
@@ -141,6 +209,14 @@ function pintaYo(){const y=ls.get("vozYo",null);
     $("#yoNom").textContent=y.nombre;$("#yoOrg").textContent=y.organizacion+(y.rol?" · "+y.rol:"");$("#yoVista").hidden=false;$("#yoForm").hidden=true}
   else{$("#yoVista").hidden=true;$("#yoForm").hidden=false}}
 $("#yoCambiar").onclick=()=>{$("#yoVista").hidden=true;$("#yoForm").hidden=false;$("#nombre").focus()};
+
+/* ============ UNA RESPUESTA POR TELÉFONO ============ */
+const YA_KEY="vozEnviado";
+function yaRespondio(){return !!ls.get(YA_KEY,null)}
+function mostrarYaRespondio(){
+  $("#form").hidden=true;$("#gracias").hidden=false;
+  $("#grTxt").textContent="Ya recibimos una respuesta desde este teléfono. Gracias por participar.";
+  window.scrollTo(0,0)}
 
 /* ============ GRABACIÓN (una por pregunta) ============ */
 const MIMES=["audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"];
@@ -165,13 +241,40 @@ document.querySelectorAll("[data-parte]").forEach(sec=>{
       btn.classList.remove("rec");lbl.textContent="Grabar de nuevo";sec.querySelector(".tiempo").textContent="";
       if(blob.size<800){$("#err").textContent="La grabación quedó vacía. Intente de nuevo.";return}
       const fr=new FileReader();fr.onload=()=>{st.audio={base64:String(fr.result).split(",")[1],mime:tipo,seg};
-        sec.querySelector(".listaTxt").textContent="Nota de voz lista · "+fmt(seg);sec.querySelector("audio").src=URL.createObjectURL(blob);sec.querySelector(".lista").hidden=false};fr.readAsDataURL(blob)};
+        sec.querySelector(".listaTxt").textContent="Nota de voz lista · "+fmt(seg);sec.querySelector("audio").src=URL.createObjectURL(blob);sec.querySelector(".lista").hidden=false;revisa()};fr.readAsDataURL(blob)};
     st.rec.start(1000);btn.classList.add("rec");lbl.textContent="Detener";sec.querySelector(".lista").hidden=true;st.audio=null;
     timer=setInterval(()=>{const s=(Date.now()-t0)/1000;sec.querySelector(".tiempo").textContent=fmt(s)+" / "+fmt(CONFIG.maxSeg);if(s>=CONFIG.maxSeg&&st.rec.state==="recording")st.rec.stop()},250);
   };
-  sec.querySelector(".borrar").onclick=()=>{st.audio=null;sec.querySelector(".lista").hidden=true;sec.querySelector("audio").removeAttribute("src");lbl.textContent=txt0};
-  st.reset=()=>{st.audio=null;sec.querySelector(".lista").hidden=true;sec.querySelector("textarea").value="";lbl.textContent=txt0};
+  sec.querySelector(".borrar").onclick=()=>{st.audio=null;sec.querySelector(".lista").hidden=true;sec.querySelector("audio").removeAttribute("src");lbl.textContent=txt0;revisa()};
+  st.reset=()=>{st.audio=null;sec.querySelector(".lista").hidden=true;sec.querySelector("textarea").value="";lbl.textContent=txt0;revisa()};
 });
+
+/* ============ TODOS LOS CAMPOS SON OBLIGATORIOS ============ */
+/* Nada se envía hasta que las cinco cosas estén: nombre, organización, cargo,
+   la visión, el compromiso y la autorización. El botón queda apagado mientras falte algo. */
+const ETIQUETA={vision:"su visión: grábela o escríbala",compromiso:"su compromiso: grábelo o escríbalo"};
+function faltantes(){
+  const f=[];
+  if(!$("#nombre").value.trim())f.push(["nombre","su nombre"]);
+  if(!$("#org").value.trim())f.push(["org","su organización o gremio"]);
+  if(!$("#rol").value.trim())f.push(["rol","su cargo o rol"]);
+  for(const [k,st] of Object.entries(PARTES)){
+    const texto=(st.sec.querySelector("textarea")||{}).value||"";
+    if(!texto.trim()&&!st.audio)f.push([k,ETIQUETA[k]]);
+  }
+  if(!$("#acepto").checked)f.push(["acepto","la autorización de datos"]);
+  return f;
+}
+function revisa(){
+  const f=faltantes(),caja=$("#falta");
+  $("#enviar").disabled=f.length>0;
+  if(!f.length){caja.hidden=true;caja.innerHTML="";return}
+  caja.hidden=false;
+  caja.innerHTML="<b>Para enviar falta:</b><ul>"+f.map(x=>"<li>"+x[1]+"</li>").join("")+"</ul>";
+}
+["#nombre","#org","#rol"].forEach(sel=>{$(sel).addEventListener("input",revisa)});
+$("#acepto").addEventListener("change",revisa);
+document.querySelectorAll("[data-parte] textarea").forEach(t=>t.addEventListener("input",revisa));
 
 /* ============ ENVÍO CON COLA (si la conexión falla, reintenta sola) ============ */
 let colaMem=[];
@@ -194,25 +297,28 @@ setInterval(vaciar,15000);
 
 $("#form").onsubmit=async e=>{
   e.preventDefault();const err=$("#err");err.textContent="";
+  if(yaRespondio()){mostrarYaRespondio();return}
   if(grabando){err.textContent="Detenga la grabación antes de enviar.";return}
   const nombre=$("#nombre").value.trim(),org=$("#org").value.trim(),rol=$("#rol").value.trim();
-  if(!nombre||!org){err.textContent="Escriba su nombre y su organización.";$("#yoForm").hidden=false;$("#yoVista").hidden=true;return}
+  if(!nombre||!org||!rol){err.textContent="Escriba su nombre, su organización y su cargo.";$("#yoForm").hidden=false;$("#yoVista").hidden=true;$("#nombre").focus();revisa();return}
   const resp={};
   for(const [k,st] of Object.entries(PARTES)){const texto=st.sec.querySelector("textarea").value.trim();
-    if(!texto&&!st.audio){err.textContent=k==="vision"?"Falta su visión: grábela o escríbala.":"Falta su compromiso: grábelo o escríbalo.";st.sec.scrollIntoView({behavior:"smooth"});return}
+    if(!texto&&!st.audio){err.textContent=k==="vision"?"Falta su visión: grábela o escríbala.":"Falta su compromiso: grábelo o escríbalo.";st.sec.classList.add("pide");st.sec.scrollIntoView({behavior:"smooth",block:"center"});revisa();return}
     resp[k]={texto,audio:st.audio}}
-  if(!$("#acepto").checked){err.textContent="Para enviar, marque la autorización de datos.";return}
+  if(!$("#acepto").checked){err.textContent="Para enviar, marque la autorización de datos.";$("#acepto").focus();revisa();return}
+  document.querySelectorAll(".caja.pide").forEach(c=>c.classList.remove("pide"));
   ls.set("vozYo",{nombre,organizacion:org,rol});
   const id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
   const p={id,nombre,organizacion:org,rol,vision:resp.vision,compromiso:resp.compromiso,consentimiento:true,cliente:new Date().toISOString()};
+  if(CONFIG.url)ls.set(YA_KEY,{id,fecha:p.cliente});
   $("#enviar").disabled=true;$("#enviar").textContent="Enviando…";
   const ok=await mandar(p);if(!ok){guardaCola(cola().concat([p]));pintaPend()}
   $("#enviar").disabled=false;$("#enviar").textContent="Enviar mis respuestas";
   $("#form").hidden=true;$("#gracias").hidden=false;
   $("#grTxt").textContent=ok?"En un par de minutos sus respuestas quedan transcritas y ubicadas en las palancas del sistema.":"La conexión está lenta: sus respuestas quedaron guardadas en este teléfono y se enviarán solas.";window.scrollTo(0,0);
 };
-$("#otra").onclick=()=>{Object.values(PARTES).forEach(st=>st.reset&&st.reset());$("#acepto").checked=false;$("#gracias").hidden=true;$("#form").hidden=false;pintaYo();window.scrollTo(0,0)};
-pintaYo();pintaPend();vaciar();
+pintaYo();pintaPend();vaciar();revisa();
+if(yaRespondio())mostrarYaRespondio();
 </script>
 </body>
 </html>
