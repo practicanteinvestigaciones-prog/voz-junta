@@ -165,3 +165,62 @@ body.proyectar .vz-nube{min-height:340px}
 }
 :root[data-theme="dark"] #v-voz .vz-kpis .k-marino{border-top-color:#EAF1F6}
 :root[data-theme="dark"] #v-voz .vz-kpis .k-marino .num{color:#EAF1F6}
+
+/* ===== cuatro ajustes de la vista =====
+   1. el título y su entradilla, sobre el marino de la paleta
+   2. la nube de palabras, sobre el crema
+   3. el título de la nube, centrado y en mayúscula
+   4. cada botón de momento con su propio color                */
+
+/* 1 · el encabezado se lee como una sola pieza */
+#v-voz .vz-intro{
+  background:var(--ccc-marino,#073A56);
+  border-radius:14px;
+  padding:20px 24px 22px;
+  margin:6px 0 2px;
+}
+#v-voz .vz-intro h1{color:#FFFFFF;margin:0}
+#v-voz .vz-intro .dek{color:#CFE0EA;margin:8px 0 0;max-width:62ch}
+body.proyectar #v-voz .vz-intro{padding:16px 24px;margin:8px 0 2px}
+body.proyectar #v-voz .vz-intro h1{margin:0}
+
+/* 2 · la nube se para sobre el crema, dentro de su caja blanca */
+#v-voz .vz-nube-caja{background:var(--sup);border-color:var(--linea)}
+#v-voz .vz-nube{
+  background:var(--mono);
+  border-radius:12px;
+  padding:22px 16px 16px;
+  margin-top:10px;
+}
+body.proyectar #v-voz .vz-nube{padding:30px 20px 22px}
+
+/* 3 · el título de la nube, centrado y en versales */
+#v-voz .vz-nube-top{display:block;position:relative;text-align:center}
+#v-voz .vz-nube-top h2{
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  font-size:15px;
+  justify-content:center;
+  margin:2px 0 0;
+}
+#v-voz .vz-nube-top #vzNubeLimpiar{position:absolute;right:0;top:0}
+body.proyectar #v-voz .vz-nube-top h2{font-size:19px;letter-spacing:.09em}
+
+/* 4 · un color por momento: apagado con su color, encendido relleno */
+#v-voz .vz-secs .sug.on,#v-voz #vzMom .sug{font-weight:700}
+#v-voz #vzMom .m-todo{color:var(--ccc-marino,#073A56);border-color:var(--ccc-marino,#073A56)}
+#v-voz #vzMom .m-vision{color:var(--p1);border-color:var(--p1)}
+#v-voz #vzMom .m-compromiso{color:var(--acc);border-color:var(--acc)}
+#v-voz #vzMom .m-todo.on{background:var(--ccc-marino,#073A56);border-color:var(--ccc-marino,#073A56);color:#fff}
+#v-voz #vzMom .m-vision.on{background:var(--p1);border-color:var(--p1);color:#fff}
+#v-voz #vzMom .m-compromiso.on{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) #v-voz .vz-intro{background:#0B3A54;box-shadow:inset 0 0 0 1px #1F546F}
+  :root:not([data-theme="light"]) #v-voz .vz-intro .dek{color:#B6CBD9}
+  :root:not([data-theme="light"]) #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
+  :root:not([data-theme="light"]) #v-voz #vzMom .m-todo.on{background:#EAF1F6;border-color:#EAF1F6;color:#0B3A54}
+}
+:root[data-theme="dark"] #v-voz .vz-intro{background:#0B3A54;box-shadow:inset 0 0 0 1px #1F546F}
+:root[data-theme="dark"] #v-voz .vz-intro .dek{color:#B6CBD9}
+:root[data-theme="dark"] #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
+:root[data-theme="dark"] #v-voz #vzMom .m-todo.on{background:#EAF1F6;border-color:#EAF1F6;color:#0B3A54}
