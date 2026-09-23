@@ -9,6 +9,12 @@
  *       Etapa 1  audio  -> texto      GEMINI_API_KEY
  *       Etapa 2  texto  -> palanca    GEMINI_API_KEY_2, de a 20 respuestas por llamada
  *  4. La hoja se escribe por columnas completas, no celda por celda.
+ *  5. (23 sep) La clasificacion usa el mapa de terminos por palanca derivado del
+ *     Resumen ejecutivo PND Cartagena-Bolivar v6: cada palanca lleva su definicion
+ *     larga y su vocabulario, hay reglas de desempate para las confusiones frecuentes
+ *     (sector vs. palanca, agua vs. clima, empleo vs. formacion, reglas vs. brechas),
+ *     ocho ejemplos resueltos, y una pista deterministica por palabras clave que se
+ *     le pasa a la IA como apoyo — no como respuesta.
  *
  * Montaje: ver README.md. Antes del evento ejecute verificarClaves().
  */
@@ -36,16 +42,35 @@ const COLUMNAS = ['id', 'recibido', 'nombre', 'organizacion', 'rol']
   .concat(PARTES.map(p => p + '_palabras'));  // al final, para no mover las columnas existentes
 
 const PALANCAS = {
-  conectividad: 'Conectividad que mueve la producción y acerca a la gente (vías, puertos, aeropuerto, tren, accesos, conectividad digital)',
-  energia: 'Energía confiable para la casa y la industria (tarifas, pérdidas, calidad del servicio, renovables, gas, conexión a la red)',
-  agua: 'Agua que llega a los hogares y riega el campo (acueducto, saneamiento, distritos de riego, Canal del Dique)',
-  clima: 'Territorio que se anticipa al clima (adaptación, riesgo, erosión costera, inundaciones, gestión ambiental)',
-  reglas: 'Reglas claras para abrir, operar y formalizarse (formalización, trámites, regulación, ventanilla única, normas sin reglamentar)',
-  credito: 'Crédito que llega y produce (financiamiento, garantías, fondos, acceso de la mipyme)',
-  formacion: 'Formación pertinente para el trabajo (educación técnica, bilingüismo, talento para puerto, turismo, industria)',
-  brechas: 'Cierre de brechas que activa el potencial productivo (pobreza, empleo formal, inclusión, barrios, ruralidad)',
-  instituciones: 'Instituciones regionales con respaldo de la Nación (capacidad de ejecución, coordinación Distrito-Gobernación-Nación, gobernanza)'
+  conectividad: 'Conectividad que mueve la produccion y acerca a la gente. Infraestructura y servicios que reducen tiempos y costos de mover carga, personas y datos: aeropuerto Rafael Nunez y Ciudadela Aeroportuaria de Bayunca, aeropuertos regionales, tren regional, doble calzada Cartagena-Barranquilla, corredor de carga Cartagena-Mamonal, vias, acceso al puerto, dragado y canal de acceso, y conectividad digital.',
+  energia: 'Energia confiable para la casa y la industria. Precio, calidad y disponibilidad del servicio electrico y del gas: tarifas, tarifa diferencial, apagones y perdidas, deuda estatal con las comercializadoras, regimen estructural para la Costa Caribe, gas costa afuera, regasificacion, renovables, almacenamiento y conexion a la red.',
+  agua: 'Agua que llega a los hogares y riega el campo. Agua potable, acueducto y saneamiento, y agua para producir: Canal del Dique, distrito de riego de Maria la Baja, navegabilidad, control de inundaciones, Bahia de Cartagena, central de abastos y reconversion agroindustrial.',
+  clima: 'Territorio que se anticipa al clima. Adaptacion y gestion del riesgo climatico: erosion costera, aumento del nivel del mar, sequias, olas de calor, ecosistemas y manglares, emisiones y descarbonizacion, economia circular y residuos. Es una palanca transversal, todavia en construccion.',
+  reglas: 'Reglas claras para abrir, operar y formalizarse. El entorno normativo del negocio: informalidad empresarial (tres de cada cuatro establecimientos de Cartagena), regimen de formalizacion progresiva, matricula y registro mercantil, cargas tributarias simplificadas, tramites y tiempos de respuesta, Ventanilla Unica Empresarial e interoperabilidad, licencias y permisos, normas expedidas pero sin reglamentar.',
+  credito: 'Credito que llega y produce. Acceso al financiamiento productivo: garantias, fondos, tasas, capital de trabajo, banca de desarrollo, instrumentos que existen pero no se usan (por ejemplo la hipoteca naval), y el acceso de la mipyme y del emprendimiento.',
+  formacion: 'Formacion pertinente para el trabajo. Que la gente tenga las capacidades que el aparato productivo necesita: educacion tecnica y tecnologica, SENA y universidades, pertinencia de la oferta, bilinguismo, certificacion de competencias, practicas y formacion dual, talento para puerto, turismo e industria.',
+  brechas: 'Cierre de brechas que activa el potencial productivo. Las condiciones sociales que habilitan o frenan la capacidad de producir: pobreza y desigualdad, barrios y periferia, ruralidad, empleo formal e ingresos, informalidad laboral, inclusion productiva de mujeres y jovenes, vivienda, seguridad alimentaria y calidad de vida.',
+  instituciones: 'Instituciones regionales con respaldo de la Nacion. Capacidad de decidir, coordinar y ejecutar: articulacion Distrito-Gobernacion-Nacion, DNP y ministerios, RAP Caribe y Comision Regional de Competitividad, capacidad de ejecucion y de estructuracion de proyectos, CONPES, vigencias futuras y concurrencia de recursos, continuidad de la politica publica, transparencia y confianza.'
 };
+
+/**
+ * Mapa de terminos por palanca, derivado del Resumen ejecutivo PND Cartagena-Bolivar (v6).
+ * Sirve para dos cosas: se le entrega a la IA como vocabulario de cada palanca, y ademas
+ * se usa aqui mismo para calcular una pista deterministica por respuesta (ver pistas_).
+ * Se escriben sin tildes y en minuscula: la comparacion tambien normaliza el texto.
+ */
+const TERMINOS = {
+  conectividad: ['via','vias','carretera','carreteras','corredor','corredores','doble calzada','ruta 90a','cantagallo','mamonal','troncal','tren','tren regional','ferrocarril','ferroviario','intermodal','intermodalidad','aeropuerto','aeropuertos','rafael nunez','bayunca','ciudadela aeroportuaria','magangue','mompox','santa rosa del sur','carmen de bolivar','aereo','aerea','pasajeros','vuelos','frecuencias','conectividad','acceso al puerto','canal de acceso','dragado','draga','calado','muelle','cabotaje','logistica','logistico','carga','transporte','movilidad','trafico','congestion','tiempos de viaje','ultima milla','ani','fdn','conectividad digital','internet','banda ancha','fibra optica','cobertura movil','telecomunicaciones','5g','conexion a internet'],
+  energia: ['energia','energetico','energetica','electricidad','electrico','luz','apagon','apagones','tarifa','tarifas','tarifa diferencial','costo de la energia','servicio de energia','confiabilidad','calidad del servicio','perdidas','subsidio','subsidios','afinia','electricaribe','comercializadora','comercializadoras','deuda estatal','regimen costa caribe','caribe energetico','gas','gas natural','gas costa afuera','regasificacion','almacenamiento','baterias','renovable','renovables','solar','fotovoltaica','eolica','eolico','autogeneracion','generacion','red electrica','conexion al sistema','capacidad atrapada','contratacion de largo plazo','transicion energetica','matriz energetica','upme','creg','xm'],
+  agua: ['agua','agua potable','acueducto','alcantarillado','saneamiento','saneamiento basico','potabilizacion','vertimientos','riego','distrito de riego','maria la baja','canal del dique','dique','ecoregion','bahia de cartagena','sedimentacion','navegabilidad','inundacion','inundaciones','control de inundaciones','cienaga','rio magdalena','hectareas','agua para producir','reconversion agroindustrial','central de abastos','centros de transformacion','abastecimiento de agua','sequia del acueducto','app 5g'],
+  clima: ['clima','climatico','cambio climatico','adaptacion','mitigacion','resiliencia','gestion del riesgo','riesgo climatico','erosion','erosion costera','playas','nivel del mar','marea','mar de leva','huracan','sequia','ola de calor','emisiones','carbono','descarbonizacion','huella de carbono','sostenibilidad ambiental','ambiental','ecosistema','ecosistemas','manglar','manglares','biodiversidad','economia circular','residuos','basuras','plasticos','ley 2232','transicion justa','reforestacion','conservacion'],
+  reglas: ['formalizacion','formalidad','informalidad empresarial','formalizarse','matricula mercantil','registro mercantil','renovacion del registro','camara de comercio','tramite','tramites','ventanilla unica','interoperabilidad','licencia','licencias','permiso','permisos','regulacion','reglamentacion','sin reglamentar','decreto','decretos','norma','normas','normativa','articulado','zese','regimen especial','simplificacion','carga tributaria','cargas','impuesto','impuestos','ica','burocracia','papeleo','tiempos de respuesta','curaduria','pot','uso del suelo','seguridad juridica','estabilidad juridica','tramite aduanero','inspeccion','sobrecostos regulatorios','abrir una empresa','crear empresa','cerrar una empresa'],
+  credito: ['credito','creditos','financiamiento','financiacion','financiero','garantia','garantias','fondo de garantias','fondo','fondos','banca','bancario','bancos','bancoldex','finagro','fng','tasa de interes','tasas','capital','capital de trabajo','capital semilla','liquidez','endeudamiento','acceso al credito','inversion productiva','mipyme','mipymes','pyme','pymes','microempresa','microempresas','emprendimiento','emprendedor','leasing','factoring','hipoteca naval','linea de credito','cupo de credito','fintech'],
+  formacion: ['formacion','capacitacion','educacion tecnica','tecnico','tecnologo','tecnologica','sena','universidad','universidades','academia','pertinencia','curriculo','oferta educativa','bilinguismo','bilingue','ingles','idioma','idiomas','talento','talento humano','capital humano','habilidades','competencias','mano de obra','mano de obra calificada','certificacion','certificaciones','aprendiz','aprendices','practicas','formacion dual','reconversion laboral','vocacional','empleabilidad','doble titulacion','becas','cobertura educativa','calidad educativa','desercion','curso','cursos','perfil ocupacional'],
+  brechas: ['brecha','brechas','pobreza','pobreza extrema','desigualdad','inclusion','inclusion social','inclusion productiva','vulnerable','vulnerabilidad','barrio','barrios','periferia','ruralidad','rural','zona rural','corregimientos','unidades comuneras','empleo formal','empleo','desempleo','trabajo decente','ingreso','ingresos','salario','informalidad laboral','mujer','mujeres','juventud','jovenes','primera infancia','nutricion','seguridad alimentaria','vivienda','habitat','salud','migracion','victimas','etnico','palenque','calidad de vida','tejido social','oportunidades','equidad'],
+  instituciones: ['institucion','instituciones','institucional','institucionalidad','gobernanza','coordinacion','articulacion','distrito','alcaldia','gobernacion','nacion','gobierno nacional','dnp','ministerio','ministerios','rap caribe','region administrativa','comision regional','competitividad','capacidad institucional','capacidad de ejecucion','ejecucion','estructuracion de proyectos','gestion publica','planeacion','plan de desarrollo','conpes','vigencias futuras','cofinanciacion','concurrencia','presupuesto','regalias','ocad','catastro','veeduria','transparencia','corrupcion','confianza','contratacion publica','continuidad','politica publica','largo plazo','bancada','congreso','incidencia']
+};
+
 const SECTORES = {
   maritimo: 'Marítimo y astillero', energia: 'Energía', turismo: 'Turismo', industria: 'Industria', agro: 'Agro',
   comext: 'Comercio exterior y logística', desemp: 'Desarrollo empresarial', hogares: 'Hogares y social'
@@ -55,9 +80,21 @@ const PREGUNTAS = {
   compromiso: '¿cuál es su compromiso concreto? (algo que su organización hará o aportará)'
 };
 
-// Nucleo curado de palabras de impacto. La IA prefiere estas; si alguien dice otra,
-// se guarda igual y el panel la muestra solo cuando tres o mas personas la repiten.
-const VOCABULARIO = ['vias','puerto','aeropuerto','conectividad','logistica','energia','tarifas','agua','acueducto','riego','dique','clima','erosion','formalizacion','tramites','regulacion','credito','financiamiento','garantias','mipyme','talento','bilinguismo','turismo','industria','agro','empleo','pobreza','inclusion','ruralidad','instituciones'];
+// Nucleo curado de palabras de impacto, una por condicion del PND, no por sector.
+// La IA prefiere estas; si alguien dice otra, se guarda igual y el panel la muestra
+// solo cuando tres o mas personas la repiten. Van con tilde: el panel las cuenta sin tilde
+// pero las proyecta tal como vienen.
+const VOCABULARIO = [
+  'vías','puerto','aeropuerto','tren','conectividad','logística','dragado','corredores','internet',
+  'energía','tarifas','gas','renovables','apagones',
+  'agua','acueducto','riego','dique','saneamiento',
+  'clima','erosión','adaptación','manglares','residuos',
+  'formalización','trámites','regulación','ventanilla','informalidad',
+  'crédito','financiamiento','garantías','mipyme','emprendimiento',
+  'formación','talento','bilingüismo','competencias','aprendices',
+  'empleo','pobreza','inclusión','ruralidad','barrios','equidad',
+  'instituciones','gobernanza','coordinación','ejecución','transparencia'
+];
 
 // ---------- Montaje ----------
 function configurar() {
@@ -286,25 +323,103 @@ function clasificarTanda_() {
   return items.length;
 }
 
+/** Texto en minuscula y sin tildes, para comparar contra TERMINOS. */
+function normal_(t) {
+  return String(t || '').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9ñ\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Pista deterministica: cuenta cuantos terminos de cada palanca aparecen en el texto.
+ * No decide nada — se le pasa a la IA como señal de apoyo, porque un termino suelto
+ * ("puerto", "empleo") puede pertenecer a mas de una palanca segun el contexto.
+ * Devuelve '' si no hay señal clara.
+ */
+function pistas_(texto) {
+  const t = ' ' + normal_(texto) + ' ';
+  if (t.length < 12) return '';
+  const puntos = [];
+  Object.keys(TERMINOS).forEach(pal => {
+    let n = 0;
+    TERMINOS[pal].forEach(term => {
+      const x = ' ' + term + ' ';
+      if (t.indexOf(x) >= 0 || t.indexOf(' ' + term + 's ') >= 0) n += (term.indexOf(' ') > 0 ? 2 : 1);
+    });
+    if (n) puntos.push([pal, n]);
+  });
+  if (!puntos.length) return '';
+  puntos.sort(function (a, b) { return b[1] - a[1]; });
+  return puntos.slice(0, 3).map(function (x) { return x[0]; }).join(', ');
+}
+
+/** Las reglas que resuelven las confusiones que mas se han visto en las pruebas. */
+const DESEMPATES = [
+  'Un SECTOR no es una palanca. "turismo", "puerto", "industria", "agro", "comercio exterior", "maritimo" nombran el sector, no la palanca. La palanca es la CONDICION que esa persona quiere mover para que ese sector funcione. Si solo nombra el sector o una aspiracion general, escoge la condicion que esa aspiracion necesita primero y marca la confianza como baja.',
+  'Puerto: si habla de acceso, dragado, canal, corredor de carga o tiempos, es conectividad. Si habla de tramites, aduana, inspecciones o normas sin reglamentar, es reglas. El puerto en si es el sector, no la palanca.',
+  'Agua: si es acueducto, riego, Canal del Dique o navegabilidad, es agua — aunque hable del campo. Si es erosion costera, nivel del mar, sequias o adaptacion, es clima.',
+  'Energia: renovables, gas, tarifas y confiabilidad son energia, no clima. Solo es clima cuando el punto es la adaptacion, las emisiones o los ecosistemas.',
+  'Informalidad: si es de empresas (matricula, registro, tramites, cargas), es reglas. Si es de personas y sus ingresos, es brechas.',
+  'Empleo: si el punto es generar empleo formal y cerrar brechas de ingreso, es brechas. Si el punto es que la gente tenga las capacidades o la formacion para ese empleo, es formacion.',
+  'Educacion: si es formar para el trabajo o pertinencia de la oferta, es formacion. Si es cobertura, desercion o desigualdad educativa como brecha social, es brechas.',
+  'Plata: si es financiamiento para que una empresa produzca (credito, garantias, tasas, fondos), es credito. Si es presupuesto publico, regalias, vigencias futuras o concurrencia de la Nacion, es instituciones.',
+  'Si la persona pide coordinacion, articulacion, ejecucion, continuidad o respaldo del Gobierno Nacional sin nombrar el tema concreto, es instituciones.'
+];
+
+const EJEMPLOS = [
+  ['Que Cartagena sea una potencia turistica de talla mundial.', 'conectividad', 'turismo', 'Nombra el sector turismo pero ninguna condicion; la condicion que primero necesita es la conectividad que trae al visitante. Confianza baja.'],
+  ['Necesitamos que el puerto tenga calado suficiente y que la carga salga rapido de Mamonal.', 'conectividad', 'comext', 'Dragado y corredor de carga: es conectividad, no el sector portuario.'],
+  ['La tarifa de energia nos esta sacando del mercado; la industria no aguanta ese costo.', 'energia', 'industria', 'Precio y confiabilidad del servicio.'],
+  ['Sin riego, el agro de Maria la Baja no se puede reconvertir.', 'agua', 'agro', 'Agua para producir, aunque hable del campo.'],
+  ['Abrir una empresa aqui toma meses entre tramites y permisos.', 'reglas', 'desemp', 'Entorno normativo del negocio.'],
+  ['Nos comprometemos a formar cien jovenes bilingues para el sector hotelero.', 'formacion', 'turismo', 'Capacidades de la gente para el trabajo.'],
+  ['Que los barrios de la periferia tengan empleo formal y no vivan del rebusque.', 'brechas', 'hogares', 'Pobreza, informalidad laboral e ingresos.'],
+  ['Que el Distrito, la Gobernacion y la Nacion por fin ejecuten lo que firman.', 'instituciones', 'desemp', 'Coordinacion y capacidad de ejecucion.']
+];
+
 function instruccionesLote_(items) {
-  const lista = items.map((it, i) =>
-    (i + 1) + '. Pregunta: ' + PREGUNTAS[it.p] + '\n   Respuesta: «' + it.texto.slice(0, 1200) + '»').join('\n');
+  const lista = items.map(function (it, i) {
+    const pis = pistas_(it.texto);
+    return (i + 1) + '. Pregunta: ' + PREGUNTAS[it.p] +
+      '\n   Respuesta: «' + it.texto.slice(0, 1200) + '»' +
+      (pis ? '\n   (señales por palabras clave, solo de apoyo: ' + pis + ')' : '');
+  }).join('\n');
+
+  const vocabPal = Object.keys(TERMINOS).map(function (k) {
+    return '  ' + k + ' — ' + PALANCAS[k] + '\n    Terminos: ' + TERMINOS[k].join(', ');
+  }).join('\n');
+
+  const ejem = EJEMPLOS.map(function (e, i) {
+    return '  ' + (i + 1) + '. «' + e[0] + '» -> palanca: ' + e[1] + ' · sector: ' + e[2] + ' · por que: ' + e[3];
+  }).join('\n');
+
   return [
-    'Eres analista del sistema de inteligencia territorial de la Cámara de Comercio de Cartagena para el Plan Nacional de Desarrollo 2026-2030.',
+    'Eres analista del sistema de inteligencia territorial de la Camara de Comercio de Cartagena para el Plan Nacional de Desarrollo 2026-2030.',
     'Abajo hay ' + items.length + ' respuestas de asistentes a la Junta de Juntas. Clasifica CADA UNA por separado.',
     '',
+    'QUE ES UNA PALANCA. Una palanca es una CONDICION del territorio que, al modificarse, mejora el desempeño de mas de un sector. No es una obra, ni un diagnostico, ni un resultado, ni un sector economico. Son nueve, en tres familias: lo que el territorio pone (conectividad, energia, agua, clima), lo que mueve a las empresas (reglas, credito, formacion) y lo que sostiene a la gente (brechas, instituciones).',
+    '',
+    'LAS NUEVE PALANCAS Y SU VOCABULARIO:',
+    vocabPal,
+    '',
+    'COMO DESEMPATAR:',
+    DESEMPATES.map(function (r, i) { return '  ' + (i + 1) + '. ' + r; }).join('\n'),
+    '',
+    'EJEMPLOS RESUELTOS:',
+    ejem,
+    '',
     'Para cada respuesta devuelve:',
-    '- n: el número de la respuesta, tal como aparece en la lista.',
-    '- palanca: SIEMPRE una, la condición que más movería lo que la persona dijo. Una palanca es una condición que, al modificarse, mejora el desempeño de más de un sector. Aunque la respuesta sea general o toque varios temas, escoge la más cercana y nunca la dejes vacía; en ese caso marca la confianza como "baja".',
-    '  Palancas: ' + Object.keys(PALANCAS).map(k => k + ' = ' + PALANCAS[k]).join(' | '),
-    '- palanca_secundaria: otra palanca que también toca claramente, o "ninguna".',
-    '- sector: ' + Object.keys(SECTORES).map(k => k + ' = ' + SECTORES[k]).join(' | '),
-    '- resumen: una frase de máximo 20 palabras, en tercera persona y sin adornos.',
-    '- confianza: alta si la palanca es evidente; media si hay dos opciones razonables; baja si la respuesta es ambigua o muy general.',
-    '- palabras: de una a tres palabras de impacto. Escoge SIEMPRE que puedas de esta lista: ' + VOCABULARIO.join(', ') + '. Si lo que dijo la persona de verdad no encaja en ninguna, usa una palabra propia: un sustantivo comun en singular y en minuscula, escrito con sus tildes. Nunca uses articulos, preposiciones, conectores, verbos, nombres propios ni palabras de menos de cuatro letras.',
+    '- n: el numero de la respuesta, tal como aparece en la lista.',
+    '- palanca: SIEMPRE una. La condicion que mas moveria lo que la persona dijo. Lee la respuesta completa y decide por el sentido, no por una palabra suelta: las señales de palabras clave son apoyo, no la respuesta. Nunca la dejes vacia; si la respuesta es muy general, escoge la mas cercana y marca la confianza como "baja".',
+    '- palanca_secundaria: otra palanca que tambien toca claramente, o "ninguna". Si la respuesta menciona dos condiciones, la principal es la que la persona pone como causa y la secundaria la que pone como consecuencia.',
+    '- sector: la actividad economica desde la que habla. ' + Object.keys(SECTORES).map(function (k) { return k + ' = ' + SECTORES[k]; }).join(' | ') + '. Si habla como ciudadano o de la gente en general, usa hogares.',
+    '- resumen: una frase de maximo 20 palabras, en tercera persona y sin adornos.',
+    '- confianza: alta si la palanca es evidente; media si hay dos opciones razonables; baja si la respuesta es ambigua, muy general o solo nombra un sector.',
+    '- palabras: de una a tres palabras de impacto. Escoge SIEMPRE que puedas de esta lista: ' + VOCABULARIO.join(', ') + '. Si lo que dijo la persona de verdad no encaja en ninguna, usa una palabra propia: un sustantivo comun en singular y en minuscula, escrito con sus tildes. Nunca uses articulos, preposiciones, conectores, verbos, nombres propios, nombres de sectores ni palabras de menos de cuatro letras.',
     '',
     'No inventes nada que la persona no haya dicho. Devuelve un objeto por cada una de las ' + items.length + ' respuestas.',
     '',
+    'RESPUESTAS:',
     lista
   ].join('\n');
 }
