@@ -4,8 +4,8 @@
 /* CONFIGURACIÓN — pegue aquí la URL del Apps Script (termina en /exec).
    Vacía = datos de prueba. También puede pasarse en la dirección: ...html?fuente=URL */
 const VOZ_CONFIG={
-  url:"",          // direccion del Apps Script (/exec): se pasa al proyectar con ?fuente=
-  token:"",        // clave del panel: se pasa al proyectar con ?clave=
+  url:"",
+  token:"",         // clave del panel (Propiedades del script > PANEL_TOKEN)
   refrescoSeg:20,   // cada cuánto se consultan voces nuevas
 };
 /* Se puede pasar la fuente en la dirección (?fuente=...&clave=...), pero solo si apunta al Apps Script */
@@ -112,10 +112,10 @@ const ORGS=[
 ["PDP Canal del Dique","PDP",["pdp", "canal del dique", "pdp canal del dique"]],
 ["Diálogo Social","DS",["dialogo social"]]];
 
-/* Catalogo de logos. Vacio = todos usan escudo de sigla.
-   Para poner un logo real: LOGOS["Cámara de Comercio de Cartagena"]="data:image/png;base64,...."
-   o una URL. La clave es el nombre oficial, tal como aparece arriba. */
-const LOGOS={};
+/* Los logos reales viven en logos.js, que se carga antes que este archivo.
+   Ahi LOGOS["<nombre oficial>"] = {d:"data:image/...", o:0|1}, donde o=1
+   marca los logos claros, que necesitan fondo oscuro para verse.
+   Si logos.js no esta, todas las organizaciones usan el escudo de sigla. */
 
 /* indice de busqueda, de la clave mas larga a la mas corta para que
    "fundacion puerto de cartagena" gane sobre "puerto de cartagena" */
@@ -138,17 +138,189 @@ function escudo(org){
   const i=buscaOrg(org),o=i>=0?ORGS[i]:null;
   const nombre=o?o[0]:String(org||"?");
   const clave=o?o[0]:sinTildes(org);
-  if(LOGOS[clave])return `<img src="${LOGOS[clave]}" alt="${esc(nombre)}" title="${esc(nombre)}">`;
+  const lg=(typeof LOGOS!=="undefined")&&LOGOS[clave];
+  if(lg)return `<img class="lg${lg.o?" osc":""}" src="${lg.d}" alt="${esc(nombre)}" title="${esc(nombre)}">`;
   const ini=o?o[1]:(String(org||"?").split(/\s+/).filter(x=>x.length>2).slice(0,2).map(x=>x[0].toUpperCase()).join("")||String(org||"?").slice(0,2).toUpperCase());
   const n=sinTildes(nombre)||"?";
   let h=0;for(let j=0;j<n.length;j++)h=(h*31+n.charCodeAt(j))>>>0;
   const fs=ini.length>=4?9.5:ini.length===3?11:12.5;
   return `<b style="background:${COLORES[h%COLORES.length]};font-size:${fs}px" title="${esc(nombre)}">${esc(ini)}</b>`;
 }
+/* lista de organizaciones que hablaron, con su escudo y cuántas voces aportó cada una.
+   Se despliega al hacer clic en el indicador de organizaciones. */
+function pintaOrgs(T){
+  const caja=$v("#vzOrgs"); if(!caja)return;
+  if(!orgAbierta){caja.hidden=true;caja.innerHTML="";return}
+  const cuenta=new Map();
+  T.forEach(d=>{const n=nombreOrg(d.organizacion); if(!n)return;
+    cuenta.set(n,(cuenta.get(n)||0)+1)});
+  const filas=[...cuenta.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es"));
+  caja.hidden=false;
+  caja.innerHTML=`<p class="vz-orgs-t">Las ${filas.length} organizaciones que ya dejaron su voz</p>`+
+    `<div class="vz-escudos">`+filas.map(([n,c])=>
+      `<span class="vz-esc">${escudo(n)}<span>${esc(n)}</span><em>${c}</em></span>`).join("")+`</div>`;
+}
+
 /* el nombre que se proyecta: el oficial cuando la organizacion esta en la lista */
 function nombreOrg(org){const i=buscaOrg(org);return i>=0?ORGS[i][0]:String(org||"")}
 let filPalabra=null;
+let orgAbierta=false;   /* la lista de organizaciones que hablaron, desplegada o no */
 let secAbierta="nube";   // nube | palancas | voces
+
+/* ===== ÁRBOL DE LOGOS =====
+   Un tablero con las organizaciones que ya hablaron. La Cámara de Comercio va
+   siempre arriba y más grande; las demás bajan por número de voces.
+   Tres formas: pirámide por niveles, árbol ramificado y burbujas.
+   El tamaño crece con la RAÍZ del número de voces: si creciera con el número
+   directo, una organización con catorce voces quedaría catorce veces más
+   grande que una con una sola y el tablero se desbalancearía. */
+const ARB_CCC="Cámara de Comercio de Cartagena";
+const ARB_W=1180;
+let arbForma="piramide";
+
+function arbDatos(T){
+  const c=new Map();
+  T.forEach(d=>{const n=nombreOrg(d.organizacion); if(!n)return; c.set(n,(c.get(n)||0)+1)});
+  const o=[...c.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es"));
+  const i=o.findIndex(x=>x[0]===ARB_CCC); if(i>0)o.unshift(o.splice(i,1)[0]);
+  return o;
+}
+function arbCorto(n){return n.replace(/\s*\(.*\)/,"")}
+function arbFicha(nom,n,alto,conEt){
+  const j=buscaOrg(nom), o=j>=0?ORGS[j]:null;
+  const L=(typeof LOGOS!=="undefined")&&LOGOS[o?o[0]:nom];
+  const ancho=Math.round(alto*1.6);
+  const ini=o?o[1]:arbCorto(nom).slice(0,3).toUpperCase();
+  const dentro=L?`<img src="${L.d}" alt="${esc(nom)}">`
+               :`<b style="font-size:${Math.round(alto*.30)}px">${esc(ini)}</b>`;
+  const cl="arb-chapa"+((L&&L.o)||!L?" osc":"");
+  let h=0,t=sinTildes(nom);for(let k=0;k<t.length;k++)h=(h*31+t.charCodeAt(k))>>>0;
+  const est=L?"":`background:${COLORES[h%COLORES.length]};`;
+  return `<span class="arb-hoja" title="${esc(nom)} · ${n} ${n===1?"voz":"voces"}">
+    <span class="${cl}" style="${est}width:${ancho}px;height:${alto}px">${dentro}</span>
+    ${conEt?`<span class="et">${esc(arbCorto(nom))}</span><span class="n">${n}</span>`:""}</span>`;
+}
+function arbPiramide(o){
+  const filas=[[o[0]]]; let i=1,cap=2;
+  while(i<o.length){filas.push(o.slice(i,i+cap));i+=cap;cap=Math.min(cap+1,7)}
+  return `<div class="arb-escena" style="width:${ARB_W}px">`+filas.map((f,k)=>{
+    const alto=k===0?126:Math.max(38,Math.round(108-k*12));
+    return `<div class="arb-fila">`+f.map(x=>arbFicha(x[0],x[1],alto,alto>=54)).join("")+`</div>`
+  }).join("")+`</div>`;
+}
+function arbRamas(o,oscuro){
+  const niv=[]; let i=0,cap=1;
+  while(i<o.length){niv.push(o.slice(i,i+cap));i+=cap;cap=Math.min(cap+1,7)}
+  const alt=niv.map((_,k)=>k===0?120:Math.max(36,Math.round(102-k*12)));
+  const ys=[]; let y=alt[0]/2+10;
+  niv.forEach((f,k)=>{ys.push(y); y+=alt[k]+(alt[k]>=54?52:26)+(k<niv.length-1?18:0)});
+  const H=Math.round(y+30), pos=[];
+  niv.forEach((f,k)=>{
+    const abre=Math.min(ARB_W-160,150+(ARB_W-300)*(k/Math.max(1,niv.length-1)));
+    f.forEach((x,j)=>{const cx=f.length===1?ARB_W/2:(ARB_W/2-abre/2)+abre*(j/(f.length-1));
+      pos.push({x:cx,y:ys[k],h:alt[k],nom:x[0],n:x[1],k})});
+  });
+  const trazo=oscuro?"#1E6C8F":"#C3D8E1"; let ramas="";
+  pos.forEach(p=>{ if(p.k===0)return;
+    const arr=pos.filter(q=>q.k===p.k-1); let m=arr[0],d=1e9;
+    arr.forEach(q=>{const dd=Math.abs(q.x-p.x);if(dd<d){d=dd;m=q}});
+    const y1=m.y+m.h/2,y2=p.y-p.h/2,mid=(y1+y2)/2;
+    ramas+=`<path d="M ${m.x} ${y1} C ${m.x} ${mid}, ${p.x} ${mid}, ${p.x} ${y2}" fill="none" stroke="${trazo}" stroke-width="${Math.max(1.5,4.5-p.k*.5)}" stroke-linecap="round"/>`;
+  });
+  return `<div class="arb-escena arb-ram" style="width:${ARB_W}px;height:${H}px">
+    <svg viewBox="0 0 ${ARB_W} ${H}" width="${ARB_W}" height="${H}">${ramas}</svg>`+
+    pos.map(p=>`<span class="arb-pin" style="left:${p.x}px;top:${p.y}px">${arbFicha(p.nom,p.n,p.h,p.h>=50)}</span>`).join("")+`</div>`;
+}
+function arbBurbujas(o){
+  const max=o[0][1], H=780;
+  const R=n=>Math.round(33+77*Math.sqrt(n)/Math.sqrt(max));
+  const it=o.map(x=>({nom:x[0],n:x[1],r:R(x[1])}));
+  it[0].x=ARB_W/2; it[0].y=it[0].r+18;
+  const p=[it[0]];
+  for(let i=1;i<it.length;i++){
+    const c=it[i]; let rad=it[0].r+c.r+14, ang=Math.PI/2, k=0;
+    while(k<20000){
+      const x=ARB_W/2+Math.cos(ang)*rad*1.28, yy=it[0].y+Math.sin(ang)*rad*0.86;
+      if(x-c.r>8&&x+c.r<ARB_W-8&&yy-c.r>8&&yy+c.r<H-8&&
+         p.every(q=>Math.hypot(q.x-x,q.y-yy)>=q.r+c.r+8)){c.x=x;c.y=yy;break}
+      ang+=0.16; if(ang>Math.PI*2.5){ang=Math.PI/2;rad+=7} k++;
+    }
+    if(c.x==null){c.x=-999;c.y=-999}
+    p.push(c);
+  }
+  return `<div class="arb-escena arb-bur" style="width:${ARB_W}px;height:${H}px">`+
+    p.filter(q=>q.x>0).map(q=>{
+      const j=buscaOrg(q.nom),oo=j>=0?ORGS[j]:null;
+      const L=(typeof LOGOS!=="undefined")&&LOGOS[oo?oo[0]:q.nom];
+      const ini=oo?oo[1]:arbCorto(q.nom).slice(0,3).toUpperCase();
+      const dentro=L?`<img src="${L.d}" alt="${esc(q.nom)}">`:`<b style="font-size:${Math.round(q.r*.44)}px">${esc(ini)}</b>`;
+      const cl="arb-glob"+((L&&L.o)||!L?" osc":"");
+      let h=0,t=sinTildes(q.nom);for(let k=0;k<t.length;k++)h=(h*31+t.charCodeAt(k))>>>0;
+      const est=L?"":`background:${COLORES[h%COLORES.length]};`;
+      const et=q.r>=58?`<span class="et">${esc(arbCorto(q.nom).slice(0,24))}<br>${q.n}</span>`:"";
+      return `<div class="${cl}" style="${est}left:${q.x}px;top:${q.y}px;width:${q.r*2}px;height:${q.r*2}px" title="${esc(q.nom)} · ${q.n}">${dentro}${et}</div>`;
+    }).join("")+`</div>`;
+}
+function arbDibuja(o,oscuro){
+  if(!o.length)return `<p class="arb-vacio">Todavía no ha hablado nadie. El árbol se arma solo a medida que llegan las voces.</p>`;
+  return arbForma==="ramas"?arbRamas(o,oscuro):arbForma==="burbujas"?arbBurbujas(o):arbPiramide(o);
+}
+function arbEncaja(caja){
+  const e=caja.querySelector(".arb-escena"); if(!e){caja.style.height="";return}
+  const k=Math.min(1.9,Math.max(.3,(caja.clientWidth-30)/ARB_W));
+  e.style.transform=`scale(${k})`; e.style.transformOrigin="top center";
+  /* la escena va escalada, así que no ocupa espacio propio: hay que darle la
+     altura a la caja a mano, y volver a medirla cuando terminen de cargar los logos */
+  const fija=()=>{caja.style.height=Math.ceil(e.getBoundingClientRect().height+18)+"px"};
+  fija();
+  [...e.querySelectorAll("img")].forEach(im=>{if(!im.complete)im.addEventListener("load",fija,{once:true})});
+  setTimeout(fija,250); setTimeout(fija,900);
+}
+function pintaArbol(T){
+  const caja=$v("#vzArbol"), man=$v("#vzArbMandos");
+  if(!caja||!man)return;
+  const o=arbDatos(T);
+  man.innerHTML=[["piramide","Pirámide"],["ramas","Ramificado"],["burbujas","Burbujas"]]
+    .map(([k,t])=>`<button type="button" class="sug${arbForma===k?" on":""}" data-f="${k}">${t}</button>`).join("")+
+    `<button type="button" class="sug acc" id="vzArbProy">Proyectar en otra ventana</button>`;
+  man.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{arbForma=b.dataset.f;pinta()});
+  const pr=$v("#vzArbProy"); if(pr)pr.onclick=()=>arbProyecta(o);
+  caja.innerHTML=arbDibuja(o,false);
+  arbEncaja(caja);
+  window.__arbUlt=o;
+}
+addEventListener("resize",()=>{const c=$v("#vzArbol"); if(c&&c.offsetParent)arbEncaja(c)});
+
+/* ventana aparte, solo con el árbol, para proyectar */
+function arbProyecta(o){
+  const w=window.open("","arbolVoz","width=1600,height=900");
+  if(!w){alert("El navegador bloqueó la ventana. Permita las ventanas emergentes para esta página.");return}
+  const css=[...document.querySelectorAll("style")].map(s=>s.textContent).join("\n");
+  w.document.open();
+  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8">'+
+   '<title>Árbol de logos · La voz de la Junta</title>'+
+   '<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">'+
+   '<style>'+css+'\n'+
+   'body{margin:0;background:#073A56;min-height:100vh;display:flex;flex-direction:column;justify-content:center}'+
+   '#v-voz{display:block}'+
+   '.arb-tit{font-family:Archivo,sans-serif;font-size:18px;letter-spacing:.18em;text-transform:uppercase;color:#9EC4D6;text-align:center;margin:0 0 26px}'+
+   '.arb-hoja .et{font-size:13px;max-width:170px;color:#B9D2DF}'+
+   '.arb-hoja .n{font-size:12.5px;color:#F8A432}'+
+   '.arb-bur .et{font-size:12px;color:#B9D2DF}'+
+   '</style></head><body><div id="v-voz"><div class="arb-marco" id="caja"></div></div></body></html>');
+  w.document.close();
+  window.__arbRepinta=()=>{
+    const c=w.document&&w.document.getElementById("caja"); if(!c)return;
+    c.innerHTML='<p class="arb-tit">Quién habló en la Junta de Juntas</p>'+arbDibuja(o,true);
+    const e=c.querySelector(".arb-escena"); if(!e)return;
+    const k=Math.min((w.innerWidth-60)/ARB_W,(w.innerHeight-120)/(e.offsetHeight||600),2.2);
+    e.style.transform="scale("+Math.max(.3,k)+")"; e.style.transformOrigin="top center";
+    c.style.height=Math.ceil((e.offsetHeight||600)*Math.max(.3,k)+20)+"px";
+  };
+  setTimeout(window.__arbRepinta,160);
+  w.addEventListener("resize",()=>setTimeout(window.__arbRepinta,80));
+}
+
 
 /* DATOS DE PRUEBA — frases inventadas para ver el panel antes del evento.
    Las organizaciones sí son de la lista de invitados, para probar los escudos.
@@ -210,11 +382,23 @@ function pinta(){
     b.textContent=t+" ("+(k?T.filter(d=>+d.momento===k).length:T.length)+")";b.onclick=()=>{filMom=k;pinta()};M.appendChild(b)});
   // kpis
   /* tres indicadores, cada uno con su color de la paleta */
-  $v("#vzKpis").innerHTML=[
-    [T.length,proc?`voces recibidas · ${proc} transcribiéndose`:"voces recibidas, transcritas y ubicadas","marino"],
-    [orgs.size,"organizaciones que hablaron","petroleo"],
-    [T.filter(d=>+d.momento===2).length,"compromisos concretos","naranja"]
-  ].map(k=>`<div class="kpi k-${k[2]}"><div class="num">${k[0]}</div><div class="lab">${k[1]}</div></div>`).join("");
+  const nVis=T.filter(d=>+d.momento===1).length, nCom=T.filter(d=>+d.momento===2).length;
+  /* el tercer indicador sigue al filtro: en Todo muestra visión y compromiso,
+     y al elegir uno de los dos se queda solo con ese */
+  const terc = filMom===1
+      ? `<div class="num">${nVis}</div><div class="lab">visiones recogidas</div>`
+    : filMom===2
+      ? `<div class="num">${nCom}</div><div class="lab">compromisos concretos</div>`
+      : `<div class="dosnum"><span><b>${nVis}</b><i>visiones</i></span><span><b>${nCom}</b><i>compromisos</i></span></div><div class="lab">lo que la sala imaginó y lo que se comprometió a hacer</div>`;
+  $v("#vzKpis").innerHTML=
+    `<div class="kpi k-marino"><div class="num">${T.length}</div><div class="lab">${proc?`voces recibidas · ${proc} transcribiéndose`:"voces recibidas, transcritas y ubicadas"}</div></div>`+
+    `<button class="kpi k-petroleo kpi-btn${orgAbierta?" on":""}" type="button" id="vzKpiOrg" aria-expanded="${orgAbierta}">`+
+      `<div class="num">${orgs.size}</div><div class="lab">organizaciones que hablaron</div>`+
+      `<span class="kpi-pista">${orgAbierta?"ocultar la lista":"clic para ver cuáles"}</span></button>`+
+    `<div class="kpi k-naranja">${terc}</div>`;
+  $v("#vzKpiOrg").onclick=()=>{orgAbierta=!orgAbierta;pinta()};
+  pintaOrgs(T);
+  pintaArbol(T);
   // palancas
   const cnt={},org={};PAL.forEach(p=>{cnt[p[0]]=0;org[p[0]]=new Set()});
   F.forEach(d=>{cnt[d.palanca]++;if(d.organizacion)org[d.palanca].add(nombreOrg(d.organizacion))});
@@ -237,7 +421,7 @@ function pinta(){
       if(!n)return"<td class='z' style='background:var(--mono)'>·</td>";const pct=Math.round(25+75*n/mmx);
       return`<td style="background:color-mix(in srgb,${TINTA[f]} ${pct}%,var(--sup));color:${pct>55?"#fff":"var(--ink)"}">${n}</td>`}).join("")+"</tr>").join("");
   // secciones: una a la vez, para que la vista no se vea saturada
-  const SECS=[["nube","Nube de palabras"],["analisis","Palancas y voces"]];
+  const SECS=[["nube","Nube de palabras"],["analisis","Palancas y voces"],["arbol","Árbol de logos"]];
   const S=$v("#vzSecs");S.innerHTML="";
   SECS.forEach(([k,t])=>{const b=document.createElement("button");b.type="button";
     b.className="sug"+(secAbierta===k?" on":"");b.textContent=t;
