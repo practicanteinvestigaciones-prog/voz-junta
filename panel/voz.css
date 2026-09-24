@@ -173,17 +173,7 @@ body.proyectar .vz-nube{min-height:340px}
    4. cada botón de momento con su propio color                */
 
 /* 1 · el encabezado se lee como una sola pieza */
-#v-voz .vz-intro{
-  background:var(--ccc-marino,#073A56);
-  border-radius:14px;
-  padding:20px 24px 22px;
-  margin:6px 0 2px;
-}
-#v-voz .vz-intro h1{color:#FFFFFF;margin:0}
-#v-voz .vz-intro .dek{color:#CFE0EA;margin:8px 0 0;max-width:62ch}
-body.proyectar #v-voz .vz-intro{padding:16px 24px;margin:8px 0 2px}
-body.proyectar #v-voz .vz-intro h1{margin:0}
-
+body.proyectar body.proyectar 
 /* 2 · la nube se para sobre el crema, dentro de su caja blanca */
 #v-voz .vz-nube-caja{background:var(--sup);border-color:var(--linea)}
 #v-voz .vz-nube{
@@ -215,12 +205,95 @@ body.proyectar #v-voz .vz-nube-top h2{font-size:19px;letter-spacing:.09em}
 #v-voz #vzMom .m-vision.on{background:var(--p1);border-color:var(--p1);color:#fff}
 #v-voz #vzMom .m-compromiso.on{background:var(--acc);border-color:var(--acc);color:#fff}
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) #v-voz .vz-intro{background:#0B3A54;box-shadow:inset 0 0 0 1px #1F546F}
-  :root:not([data-theme="light"]) #v-voz .vz-intro .dek{color:#B6CBD9}
-  :root:not([data-theme="light"]) #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
+  :root:not([data-theme="light"])   :root:not([data-theme="light"])   :root:not([data-theme="light"]) #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
   :root:not([data-theme="light"]) #v-voz #vzMom .m-todo.on{background:#EAF1F6;border-color:#EAF1F6;color:#0B3A54}
 }
-:root[data-theme="dark"] #v-voz .vz-intro{background:#0B3A54;box-shadow:inset 0 0 0 1px #1F546F}
-:root[data-theme="dark"] #v-voz .vz-intro .dek{color:#B6CBD9}
-:root[data-theme="dark"] #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
+:root[data-theme="dark"] :root[data-theme="dark"] :root[data-theme="dark"] #v-voz #vzMom .m-todo{color:#EAF1F6;border-color:#EAF1F6}
 :root[data-theme="dark"] #v-voz #vzMom .m-todo.on{background:#EAF1F6;border-color:#EAF1F6;color:#0B3A54}
+
+/* logos reales de las organizaciones (logos.js). El escudo de sigla sigue
+   siendo un circulo; el logo va en una pastilla mas ancha para que se lea. */
+#v-voz .vz-esc img.lg{width:auto;height:26px;max-width:96px;border-radius:6px;object-fit:contain;background:#FFFFFF;padding:2px 6px;flex:0 0 auto}
+#v-voz .vz-esc img.lg.osc{background:var(--ccc-marino,#073A56)}
+body.proyectar #v-voz .vz-esc img.lg{height:34px;max-width:128px}
+
+/* ===== héroe de la vista, igual al del inicio pero con la paleta de la Cámara =====
+   La foto viene de la clase .hero del prototipo; encima va un velo marino/petróleo
+   para que el color sea el de la Cámara y el texto blanco se lea. */
+#v-voz .vz-hero{position:relative;padding:46px clamp(18px,4.5vw,56px) 60px}
+#v-voz .vz-hero::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,rgba(7,58,86,.955) 0%,rgba(7,58,86,.86) 44%,rgba(1,124,156,.44) 100%)}
+#v-voz .vz-hero>*{position:relative;z-index:1}
+#v-voz .vz-hero h1{margin:8px 0 10px}
+#v-voz .vz-hero .ey{color:#9EC4D6}
+#v-voz .vz-hero .dek{color:#DCE9F0;max-width:66ch}
+#v-voz .vz-hero .vz-btns{position:absolute;right:clamp(18px,4.5vw,56px);top:20px;z-index:2;display:flex;gap:10px;align-items:center}
+#v-voz .vz-hero .vz-estado{background:rgba(255,255,255,.14);color:#EAF3F7;border:1px solid rgba(255,255,255,.22)}
+#v-voz .vz-hero #vzProy{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)}
+#v-voz .vz-hero #vzProy:hover{background:rgba(255,255,255,.24)}
+#v-voz .vz-cuerpo{padding-top:26px}
+@media(max-width:720px){
+  #v-voz .vz-hero{padding-top:78px}
+  #v-voz .vz-hero .vz-btns{top:16px;left:clamp(18px,4.5vw,56px);right:auto}
+}
+body.proyectar #v-voz .vz-hero{padding-top:30px;padding-bottom:34px}
+
+/* ===== indicador de organizaciones: ahora se puede abrir ===== */
+#v-voz .kpi-btn{text-align:left;font:inherit;cursor:pointer;border-left:0;border-right:0;border-bottom:0;
+  position:relative;transition:transform .12s,box-shadow .12s}
+#v-voz .kpi-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(7,58,86,.16)}
+#v-voz .kpi-btn .kpi-pista{font-family:Archivo,sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--p1);margin-top:6px;display:inline-flex;align-items:center;gap:5px}
+#v-voz .kpi-btn .kpi-pista::after{content:"▾";font-size:10px;transition:transform .15s}
+#v-voz .kpi-btn.on .kpi-pista::after{transform:rotate(180deg)}
+
+/* dos cifras dentro del tercer indicador cuando el filtro está en Todo */
+#v-voz .kpi .dosnum{display:flex;gap:22px;align-items:flex-end}
+#v-voz .kpi .dosnum span{display:flex;flex-direction:column;line-height:1}
+#v-voz .kpi .dosnum b{font-family:Archivo,sans-serif;font-size:32px;font-weight:800;color:var(--acc)}
+#v-voz .kpi .dosnum i{font-family:Archivo,sans-serif;font-size:11px;font-style:normal;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-top:4px}
+
+/* ===== lista de organizaciones que hablaron ===== */
+#v-voz .vz-listaorgs{background:var(--sup);border:1px solid var(--linea);border-radius:14px;
+  padding:16px 18px 18px;margin:12px 0 0;box-shadow:var(--sombra)}
+#v-voz .vz-orgs-t{font-family:Archivo,sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink2);margin:0 0 12px}
+#v-voz .vz-listaorgs .vz-esc em{font-family:Archivo,sans-serif;font-style:normal;font-size:11px;font-weight:800;
+  color:#fff;background:var(--p1);border-radius:99px;padding:2px 7px;margin-left:2px;flex:0 0 auto}
+#v-voz .vz-listaorgs .vz-esc{max-width:none}
+#v-voz .vz-listaorgs .vz-esc>span{overflow:visible;white-space:normal;max-width:210px;line-height:1.25}
+
+/* ===== árbol de logos ===== */
+#v-voz .vz-arb-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin:18px 0 12px}
+#v-voz .vz-arb-top h2{margin:0}
+#v-voz .vz-arb-mandos{display:flex;flex-wrap:wrap;gap:8px}
+#v-voz .vz-arb-mandos .sug.on{background:var(--ccc-marino,#073A56);border-color:var(--ccc-marino,#073A56);color:#fff}
+#v-voz .vz-arb-mandos .sug.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+#v-voz .vz-arb-caja{background:var(--sup);border:1px solid var(--linea);border-radius:16px;
+  padding:22px 14px;overflow:hidden;position:relative}
+#v-voz .arb-escena{position:relative;margin:0 auto}
+#v-voz .arb-fila{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:26px;margin-bottom:26px}
+#v-voz .arb-hoja{display:inline-flex;flex-direction:column;align-items:center;gap:5px;vertical-align:middle}
+#v-voz .arb-chapa{background:#FFFFFF;border-radius:12px;display:grid;place-items:center;
+  box-shadow:0 3px 14px rgba(7,58,86,.13);border:1px solid rgba(7,58,86,.07)}
+#v-voz .arb-chapa.osc{background:var(--ccc-marino,#073A56)}
+#v-voz .arb-chapa img{max-width:82%;max-height:70%;object-fit:contain;display:block}
+#v-voz .arb-chapa b{font-family:Archivo,sans-serif;color:#fff;letter-spacing:.02em}
+#v-voz .arb-hoja .et{font-family:Archivo,sans-serif;font-size:10.5px;font-weight:700;color:var(--ink2);
+  text-align:center;max-width:130px;line-height:1.25}
+#v-voz .arb-hoja .n{font-family:Archivo,sans-serif;font-size:10px;font-weight:800;color:var(--acc)}
+#v-voz .arb-ram .arb-pin{position:absolute;transform:translate(-50%,-50%)}
+#v-voz .arb-ram svg{position:absolute;left:0;top:0}
+#v-voz .arb-bur .arb-glob{position:absolute;transform:translate(-50%,-50%);border-radius:50%;
+  background:#fff;display:grid;place-items:center;padding:10px;
+  box-shadow:0 4px 18px rgba(7,58,86,.16);border:2px solid rgba(7,58,86,.06)}
+#v-voz .arb-bur .arb-glob.osc{background:var(--ccc-marino,#073A56)}
+#v-voz .arb-bur .arb-glob img{max-width:78%;max-height:62%;object-fit:contain}
+#v-voz .arb-bur .arb-glob b{font-family:Archivo,sans-serif;color:#fff}
+#v-voz .arb-bur .arb-glob .et{font-family:Archivo,sans-serif;font-size:9.5px;font-weight:700;
+  color:var(--ink2);text-align:center;line-height:1.15;margin-top:4px;max-width:92%;overflow:hidden}
+#v-voz .arb-bur .arb-glob.osc .et{color:#B9D2DF}
+#v-voz .arb-vacio{color:var(--gris);text-align:center;padding:40px 0;font-size:15px}
+body.proyectar #v-voz .vz-arb-top{display:none}
+body.proyectar #v-voz .vz-arb-caja{background:transparent;border:0}
