@@ -24,11 +24,24 @@ Las dos etapas usan **claves de proyectos de Google Cloud distintos**, para que 
 | --- | --- |
 | `index.html` | Página de captura. Es la que se publica en GitHub Pages y la que abre el QR. |
 | `apps_script/Codigo.gs` | Backend completo: recepción, guardado en Drive, transcripción y clasificación con Gemini, y entrega de datos al panel. Se pega en un proyecto de Google Apps Script. |
-| `panel/voz.js`, `panel/voz.css`, `panel/voz.html` | Vista «La voz de la Junta» del panel, en dos secciones: **Nube de palabras** (las palabras crecen según cuántas personas las dijeron; al tocar una aparecen las organizaciones que la dijeron, con su logo o su escudo de iniciales) y **Palancas y voces** (indicadores, las nueve palancas, la matriz palanca × sector y el muro de voces). Incluye el modo proyección. |
-| `panel/build.py` | Inserta esas tres piezas dentro del prototipo del sistema de inteligencia territorial y genera el HTML final del panel. |
+| `panel/voz.js`, `panel/voz.css`, `panel/voz.html` | Vista «La voz de la Junta» del panel. Abre con el mismo héroe del inicio, en la paleta de la Cámara, y sigue con tres indicadores —voces recibidas; organizaciones que hablaron, que al tocarlas despliegan la lista con su logo; y un tercero que sigue al filtro Todo / Visión / Compromiso—, la **Nube de palabras** (crecen según cuántas personas las dijeron; al tocar una aparecen las organizaciones que la dijeron) **Palancas y voces** (las nueve palancas, la matriz palanca × sector y el muro de voces) y **Árbol de logos** (las organizaciones que hablaron, la Cámara arriba y las demás por número de voces, en pirámide, ramificado o burbujas, con botón para proyectarlo en una ventana aparte). Incluye el modo proyección. |
+| `panel/logos.js` | Catálogo de logos oficiales de las organizaciones invitadas, embebidos como imágenes. La clave de cada entrada es el nombre oficial tal como aparece en `ORGS`, dentro de `voz.js`. Quien no tenga logo sale con un escudo de iniciales. |
+| `panel/build.py` | Inserta esas piezas dentro del prototipo del sistema de inteligencia territorial y genera el HTML final del panel. |
 | `carteles_qr.html` | Generador del cartel A4 con el QR. Se abre en el navegador, se pega la dirección pública y se imprime. |
 | `LEEME_montaje.md` | Pasos de montaje de principio a fin. |
 | `PLAN.md` | Estado del proyecto, decisiones y pendientes. |
+
+## Los logos de las organizaciones
+
+`panel/logos.js` trae el logo oficial de 52 de las 60 organizaciones invitadas. Cada uno se bajó del sitio web de la propia entidad y se revisó a ojo antes de entrar; ninguno viene de un banco de imágenes ni de una búsqueda genérica. Las que no tienen logo —porque no tienen sitio propio, porque el sitio no lo publica como archivo suelto o porque no respondió— salen con un escudo de iniciales, que no estorba.
+
+Cada entrada tiene esta forma:
+
+```js
+"Nombre oficial exacto":{"d":"data:image/png;base64,....","o":0}
+```
+
+`o:1` marca los logos claros, que necesitan fondo oscuro para verse. La clave debe ser idéntica al nombre oficial de `ORGS`, en `voz.js`; si no coincide, la organización sale con escudo.
 
 ## Lo que NO está aquí, a propósito
 
