@@ -1,6 +1,6 @@
 # Plan para el evento — viernes 25 de septiembre de 2026
 
-Estado al miércoles 23 por la tarde. El sistema está corriendo, probado con carga y con la autorización de datos resuelta. Falta el ensayo con teléfonos reales.
+Estado al miércoles 23 por la noche. El sistema está corriendo, probado con carga y con la autorización de datos resuelta. Falta el ensayo con teléfonos reales.
 
 ## Lo que ya funciona
 
@@ -45,7 +45,15 @@ Van también ocho ejemplos resueltos y una **pista determinista**: antes de llam
 
 **Paleta e identidad.** El panel usa la paleta de la Cámara —marino, petróleo, naranja, ámbar y crema—, aplicada solo a la vista «La voz de la Junta» y al modo proyección. Las tres familias de palancas toman tres colores distintos: territorio petróleo, empresas naranja, gente ámbar.
 
-**Las 60 organizaciones.** Están en el panel con su nombre oficial, su sigla y las otras formas en que la gente las escribe. Cada una sale con un escudo de sigla en los colores de la paleta. Para poner el logo real de alguna, se agrega su archivo o su dirección en `LOGOS` dentro de `panel/voz.js`, con el nombre oficial como clave: los logos hay que verificarlos uno por uno, porque un logo equivocado proyectado delante del gerente de esa empresa es peor que no tener logo.
+**Las 60 organizaciones.** Están en el panel con su nombre oficial, su sigla y las otras formas en que la gente las escribe, para que «CCC», «la Cámara» y «Cámara de Comercio de Cartagena» sean una sola y no tres.
+
+**Los logos: 52 de 60.** Se buscó organización por organización, primero el sitio propio y después —cuando no había— el sitio del gremio que la agrupa o de la red a la que pertenece. Esa segunda vía fue la que destrabó la mayoría: el Consejo Gremial de Bolívar publica una ficha con logo de cada asociado, Redprodepaz un directorio de sus programas, la UTB la página del CUEE. Cada logo se revisó a ojo en una hoja de contactos antes de entrar al panel. Las ocho restantes salen con su escudo de sigla.
+
+Vale la pena dejar escrito por qué no se pudo automatizar del todo. Bajar el logo del sitio con un raspado simple acierta más o menos la mitad de las veces, y los errores son justo los peligrosos: a la Alcaldía le ponía el logo de GOV.CO, a la Cámara Marítima el de la ANDI, a CAMACOL dos sellos ISO y a Tenaris una foto de la planta. Por eso el paso de revisión a ojo no es opcional: **un logo equivocado proyectado delante del gerente de esa empresa es peor que no tener logo.** Los ocho que faltan están listados en `LOGOS_de_donde_salieron.md` con la razón de cada uno. Cuatro de ellos no son un problema de búsqueda: Congresistas de Bolívar es una bancada, no una entidad con marca; el CTP y la Comisión Regional de Competitividad no tienen identidad visual propia; y «Cámara Marítima Colombiana» no existe con ese nombre exacto.
+
+Los logos viven en `panel/logos.js`, con el nombre oficial como clave y una marca `o:1` para los que son claros y necesitan fondo oscuro.
+
+**La vista.** Abre con el mismo héroe del inicio —la foto de Cartagena— pero con el velo en marino y petróleo de la Cámara. Debajo van tres indicadores: las voces recibidas; las organizaciones que hablaron, que al tocarlas despliegan la lista con su logo y cuántas voces aportó cada una; y un tercero que sigue al filtro, mostrando visiones y compromisos juntos en «Todo» y solo uno de los dos al elegirlo.
 
 **Habeas data.** Resuelto, y por la vía simple: el ejercicio se declara **público**. Se decidió así porque lo que se recoge no es sensible —nombre, organización, cargo y una respuesta— y porque el propósito mismo del ejercicio es que esas voces se vean: se proyectan en la sala y entran en los documentos de incidencia. Pedir cédula o correo habría agrandado el problema sin agregar nada.
 
@@ -58,12 +66,18 @@ Dos puntos que valía la pena cubrir y quedaron cubiertos:
 
 Los datos del responsable —dirección, teléfono, canal de PQRSD, enlace a la política— salen de la página oficial de la Cámara y viven en un solo bloque del formulario, así que se corrigen en un lugar. **El texto no lo redactó un abogado:** conviene que la oficina jurídica lo revise antes del viernes, pero no bloquea.
 
+**Árbol de logos.** Pedido nuevo: un tablero con los logos de las organizaciones que hablaron, la Cámara arriba y más grande, y las demás debajo por número de voces, proyectable en una ventana aparte. Ya está en el panel, como tercer botón al lado de «Palancas y voces», con las tres formas seleccionables —pirámide, ramificado y burbujas— y su botón para proyectarlo en una ventana aparte. Se dejaron las tres porque cuál se ve mejor depende de cuántas organizaciones hablen, y eso solo se sabrá en el ensayo. `Arbol_de_logos_prototipo.html` queda como banco de pruebas con datos inventados.
+
+Dos decisiones ya tomadas en el prototipo: el tamaño crece con la **raíz** del número de voces, no con el número directo, porque si no una organización con catorce voces quedaría catorce veces más grande que una con una y el tablero se desbalancearía; y cada logo va sobre una chapa blanca, o marino cuando el logo es claro, porque los logos con fondo transparente desaparecen si no.
+
 ## Lo que falta
 
 | Qué | Quién | Por qué bloquea |
 | --- | --- | --- |
 | Ensayo con teléfonos reales | Equipo | Es lo único del camino que no se ha probado de punta a punta: grabar desde un celular, en el sitio, con el wifi del sitio |
-| Logos reales de las organizaciones | Yolvis | Opcional. Sin ellos, cada organización sale con su escudo de sigla, que ya se ve bien |
+| Elegir la forma del árbol en el ensayo | Yolvis | Las tres están disponibles en el panel; con pocas organizaciones el ramificado se ve mejor que la pirámide |
+| Los 8 logos que faltan | Yolvis | Opcional. Esas organizaciones salen con su escudo de sigla, que ya se ve bien |
+| Subir los logos al repositorio | — | Después del ensayo. `logos.js` pesa 200 KB y subirlo por el editor web toma varios envíos por partes |
 | Congelar el código | — | El jueves, después del ensayo |
 
 ## Riesgos y plan B
